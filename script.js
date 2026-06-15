@@ -16,7 +16,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function applicaTema(dark) {
     document.body.classList.toggle("dark", dark);
-    temaBtn.textContent = dark ? "Chiaro" : "Notte";
+    temaBtn.textContent = dark ? "☼" : "☾";
     try { localStorage.setItem("tema", dark ? "dark" : "light"); } catch(e) {}
   }
 
