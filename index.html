@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#2d6a4f">
+  <title>Dispensa Digitale</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- INTESTAZIONE -->
+  <header class="app-header">
+    <h1>Dispensa Digitale</h1>
+    <button id="temaBtn" class="tema-btn">Notte</button>
+  </header>
+
+  <!-- NAVIGAZIONE A TAB -->
+  <nav class="tab-bar">
+    <button class="tab-btn attivo" data-tab="aggiungi">Aggiungi</button>
+    <button class="tab-btn" data-tab="dispensa">Dispensa</button>
+  </nav>
+
+  <!-- TAB: AGGIUNGI PRODOTTO -->
+  <main id="tab-aggiungi" class="tab-content">
+    <section class="card">
+      <h2>Aggiungi prodotto</h2>
+
+      <div class="autocomplete-wrapper">
+        <input id="nome" placeholder="Nome prodotto" autocomplete="off" inputmode="text">
+        <ul id="suggerimenti" class="suggerimenti-list hidden"></ul>
+      </div>
+
+      <div class="row-duo">
+        <input id="scadenza" type="date" class="flex1">
+        <div class="quantita-group">
+          <input id="quantita" type="number" min="1" placeholder="Qta" inputmode="numeric" class="input-qta">
+          <select id="unitaSelect" class="select-unita">
+            <option value="pz">pz</option>
+            <option value="g">g</option>
+            <option value="ml">ml</option>
+            <option value="kg">kg</option>
+            <option value="L">L</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row-duo">
+        <input id="tagInput" placeholder="Nuovo tag" class="flex1" inputmode="text">
+        <select id="tagSelect" class="flex1">
+          <option value="">Tag esistenti</option>
+        </select>
+      </div>
+
+      <div class="nutrienti-grid">
+        <input id="calorie"      placeholder="Calorie (per 100g)"      inputmode="decimal">
+        <input id="proteine"     placeholder="Proteine (per 100g)"     inputmode="decimal">
+        <input id="carboidrati"  placeholder="Carboidrati (per 100g)"  inputmode="decimal">
+        <input id="grassi"       placeholder="Grassi (per 100g)"       inputmode="decimal">
+      </div>
+
+      <button id="addBtn" class="btn-primario">Aggiungi</button>
+
+      <div class="undo-redo-bar">
+        <button id="undoBtn" disabled>&#8617; Annulla</button>
+        <button id="redoBtn" disabled>&#8618; Ripristina</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- TAB: DISPENSA -->
+  <main id="tab-dispensa" class="tab-content hidden">
+    <section class="card">
+
+      <!-- Filtri scadenza -->
+      <div class="filtri-scadenza">
+        <button class="filtro-btn attivo" data-filtro="TUTTI">Tutti</button>
+        <button class="filtro-btn" data-filtro="7">Entro 7 giorni</button>
+        <button class="filtro-btn" data-filtro="30">Entro 1 mese</button>
+      </div>
+
+      <!-- Ordinamento -->
+      <div class="ordina-row">
+        <label for="ordinaSelect">Ordina:</label>
+        <select id="ordinaSelect">
+          <option value="data">Data aggiunta</option>
+          <option value="scadenza_asc">Scadenza (prima)</option>
+          <option value="alfabetico">Alfabetico</option>
+          <option value="proteine_desc">Proteine (piu)</option>
+          <option value="proteine_asc">Proteine (meno)</option>
+          <option value="carboidrati_desc">Carboidrati (piu)</option>
+          <option value="carboidrati_asc">Carboidrati (meno)</option>
+          <option value="grassi_desc">Grassi (piu)</option>
+          <option value="grassi_asc">Grassi (meno)</option>
+        </select>
+      </div>
+
+      <!-- Tag bar -->
+      <div id="tagBar"></div>
+
+      <!-- Lista prodotti -->
+      <div id="dispensa"></div>
+    </section>
+  </main>
+
+  <!-- MODALE: GESTIONE TAG -->
+  <div id="modaleTag" class="modale hidden" role="dialog" aria-modal="true">
+    <div class="modale-box">
+      <h3>Gestisci tag</h3>
+      <ul id="listaTagGestione"></ul>
+      <button class="btn-secondario" id="chiudiModaleTag">Chiudi</button>
+    </div>
+  </div>
+
+  <!-- MODALE: MODIFICA PRODOTTO -->
+  <div id="modaleModifica" class="modale hidden" role="dialog" aria-modal="true">
+    <div class="modale-box">
+      <h3>Modifica prodotto</h3>
+      <input id="editNome"        placeholder="Nome"               inputmode="text">
+      <div class="row-duo">
+        <input id="editScadenza"  type="date" class="flex1">
+        <div class="quantita-group">
+          <input id="editQuantita" type="number" min="1" placeholder="Qta" inputmode="numeric" class="input-qta">
+          <select id="editUnita" class="select-unita">
+            <option value="pz">pz</option>
+            <option value="g">g</option>
+            <option value="ml">ml</option>
+            <option value="kg">kg</option>
+            <option value="L">L</option>
+          </select>
+        </div>
+      </div>
+      <select id="editTag"></select>
+      <input id="editCalorie"     placeholder="Calorie (per 100g)"     inputmode="decimal">
+      <input id="editProteine"    placeholder="Proteine (per 100g)"    inputmode="decimal">
+      <input id="editCarboidrati" placeholder="Carboidrati (per 100g)" inputmode="decimal">
+      <input id="editGrassi"      placeholder="Grassi (per 100g)"      inputmode="decimal">
+      <div class="modale-azioni">
+        <button id="salvaModifica" class="btn-primario">Salva</button>
+        <button id="chiudiModifica" class="btn-secondario">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
