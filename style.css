@@ -3,14 +3,14 @@
 
 :root {
   /* Sfondo e superfici */
-  --bg:          #F4E3B2; /* Vanilla (sfondo principale) */
+  --bg:          #E2E4FF; /* lavander (sfondo principale) */
   --surface:     #FFFFFF; /* Bianco per superfici pulite */
   --surface2:    #F9F5EB; /* Vanilla chiaro per sfondi secondari */
   --border:      #45462A; /* Drab Dark Brown scuro per bordi */
 
   /* Testo */
-  --text:        #310E10; /* Black Bean (testo principale) */
-  --text-soft:   #5C4033; /* Drab Dark Brown (testo secondario) */
+  --text:        #8e94f2; /* soft periwinkle (testo principale) */
+  --text-soft:   #7880E6; /* dark soft periwinkle (testo secondario) */
   --text-muted:  #8B7355; /* Cinereous (testo muto) */
 
   /* Accento (principale) */
