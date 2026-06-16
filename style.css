@@ -28,16 +28,16 @@
 }
 
 body.dark {
-  --bg:          #12151e;
+  --bg:          #16121e;
   --surface:     #1c2033;
   --surface2:    #151825;
   --border:      #333a50;
   --text:        #e0e0e0;
   --text-soft:   #a0a8b8;
   --text-muted:  #666e80;
-  --accent:      #74c69d;
-  --accent-dark: #52a87a;
-  --accent-soft: #1a3028;
+  --accent:      #f2f3ff;
+  --accent-dark: #8e94f2;
+  --accent-soft: #f2f3ff;
   --accent-line: #2a4a38;
   --danger:      #e63946;
   --danger-dark: #c1121f;
@@ -78,7 +78,7 @@ body {
 h1 {
   font-size: 26px;
   color: var(--accent);
-  font-style: italic;
+  font-style: bold;
   text-align: center;
 }
 
