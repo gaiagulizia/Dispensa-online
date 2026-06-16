@@ -412,9 +412,9 @@ window.addEventListener("DOMContentLoaded", () => {
   // GRAFICO A TORTA SVG
   // ============================================================
   const PIE = {
-    proteine:    "#E05252",
-    carboidrati: "#F0BC3D",
-    grassi:      "#4E86C8",
+    proteine:    "#8e94f2",
+    carboidrati: "#ee8434",
+    grassi:      "#f2f3ff",
   };
 
   function buildPie(carboidrati, proteine, grassi) {
