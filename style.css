@@ -59,7 +59,7 @@ body {
   color: var(--text);
   max-width: 640px;
   margin: 0 auto;
-  padding-bottom: 32px;
+  padding-bottom: 0; /* Rimosso lo spazio vuoto in basso */
   transition: background 0.25s, color 0.25s;
   -webkit-tap-highlight-color: transparent;
 }
@@ -106,7 +106,7 @@ h3 {
   flex: 1;
   padding: 10px;
   font-size: 15px;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: Arial, sans-serif; /* Cambiato font */
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
@@ -143,7 +143,7 @@ input, select {
   border-radius: 8px;
   border: 1px solid var(--border);
   font-size: 15px;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: Arial, sans-serif; /* Cambiato font */
   background: var(--surface2);
   color: var(--text);
   transition: border-color 0.2s, background 0.25s;
@@ -186,7 +186,7 @@ input::placeholder { color: var(--text-muted); }
   width: 100%;
   padding: 13px;
   font-size: 16px;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: Arial, sans-serif; /* Cambiato font */
   border: none;
   border-radius: 10px;
   background: var(--accent);
@@ -202,7 +202,7 @@ input::placeholder { color: var(--text-muted); }
   width: 100%;
   padding: 11px;
   font-size: 15px;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: Arial, sans-serif; /* Cambiato font */
   border: 1.5px solid var(--border);
   border-radius: 10px;
   background: var(--surface2);
@@ -227,7 +227,7 @@ input::placeholder { color: var(--text-muted); }
 .undo-redo-bar button {
   padding: 8px 22px;
   font-size: 14px;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: Arial, sans-serif; /* Cambiato font */
   border: 1.5px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
@@ -261,6 +261,7 @@ input::placeholder { color: var(--text-muted); }
   padding: 12px 14px;
   cursor: pointer;
   font-size: 15px;
+  font-family: Arial, sans-serif; /* Cambiato font */
   border-bottom: 1px solid var(--border);
   color: var(--text);
 }
@@ -279,7 +280,7 @@ input::placeholder { color: var(--text-muted); }
   flex: 0 0 auto;
   padding: 8px 14px;
   font-size: 13px;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: Arial, sans-serif; /* Cambiato font */
   border-radius: 20px;
   border: 1.5px solid var(--border);
   background: var(--surface);
@@ -299,7 +300,7 @@ input::placeholder { color: var(--text-muted); }
   margin-bottom: 12px;
 }
 .ordina-row label { font-size: 14px; color: var(--text-soft); white-space: nowrap; }
-.ordina-row select { flex: 1; margin: 0; font-size: 14px; padding: 8px 10px; }
+.ordina-row select { flex: 1; margin: 0; font-size: 14px; padding: 8px 10px; font-family: Arial, sans-serif; /* Cambiato font */ }
 
 /* ===== TAG BAR ===== */
 #tagBar {
@@ -317,7 +318,7 @@ input::placeholder { color: var(--text-muted); }
   border: 1.5px solid var(--border);
   background: var(--surface);
   font-size: 14px;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: Arial, sans-serif; /* Cambiato font */
   color: var(--text-soft);
   cursor: pointer;
   white-space: nowrap;
@@ -419,7 +420,7 @@ body.dark .prodotto { background: #282659; }
   flex-direction: column;
   gap: 4px;
   font-size: 12px;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: Arial, sans-serif; /* Cambiato font */
   color: var(--text-soft);
 }
 .pie-legend-item { display: flex; align-items: center; gap: 5px; }
@@ -430,18 +431,27 @@ body.dark .prodotto { background: #282659; }
 .tema-btn {
   position: absolute;
   right: 16px;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-family: 'Times New Roman', Times, serif;
+  width: 40px; /* Larghezza fissa per il cerchio */
+  height: 40px; /* Altezza fissa per il cerchio */
+  border-radius: 50%; /* Forma circolare */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px; /* Dimensione del testo adattata */
   border: 1.5px solid var(--border);
-  border-radius: 20px;
   background: var(--surface);
   color: var(--text-soft);
   cursor: pointer;
-  transition: border-color 0.2s, color 0.2s;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 
-/* ===== STATI SCADENZA — solo striscia sinistra, riquadro sempre neutro ===== */
+.tema-btn:hover, .tema-btn:active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ===== STATI SCADENZA ===== */
 .scaduto         { border-left-color: #e63946; }
 .scadenza-vicina { border-left-color: #ffbd2f; }
 .scadenza-ok     { border-left-color: #70e0a8; }
@@ -456,7 +466,7 @@ body.dark .scadenza-ok     { border-left-color: #70e0a8; }
   flex: 1;
   padding: 10px;
   font-size: 14px;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: Arial, sans-serif; /* Cambiato font */
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -502,6 +512,7 @@ body.dark .scadenza-ok     { border-left-color: #70e0a8; }
   padding: 10px 0;
   border-bottom: 1px solid var(--border);
   font-size: 15px;
+  font-family: Arial, sans-serif; /* Cambiato font */
 }
 #listaTagGestione li:last-child { border-bottom: none; }
 
@@ -509,7 +520,7 @@ body.dark .scadenza-ok     { border-left-color: #70e0a8; }
   flex: 1;
   padding: 8px 10px;
   font-size: 14px;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: Arial, sans-serif; /* Cambiato font */
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--surface2);
@@ -521,7 +532,7 @@ body.dark .scadenza-ok     { border-left-color: #70e0a8; }
 .btn-tag-salva, .btn-tag-elimina {
   padding: 8px 12px;
   font-size: 13px;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: Arial, sans-serif; /* Cambiato font */
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -537,5 +548,3 @@ body.dark .scadenza-ok     { border-left-color: #70e0a8; }
 .modale-azioni { display: flex; gap: 10px; margin-top: 16px; }
 .modale-azioni .btn-primario,
 .modale-azioni .btn-secondario { margin: 0; }
-
-.tema-btn:hover, .tema-btn:active { border-color: var(--accent); color: var(--accent); }
