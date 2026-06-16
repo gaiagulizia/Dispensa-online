@@ -2,68 +2,50 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Sfondo e superfici */
-  --bg:          #E2E4FF; /* lavander (sfondo principale) */
-  --surface:     #FFFFFF; /* Bianco per superfici pulite */
-  --surface2:    #F2F3FF; /* lavander mist chiaro per sfondi secondari */
-  --border:      #45462A; /* Drab Dark Brown scuro per bordi */
-
-  /* Testo */
-  --text:        #8e94f2; /* soft periwinkle (testo principale) */
-  --text-soft:   #7880E6; /* dark soft periwinkle (testo secondario) */
-  --text-muted:  #8B7355; /* Cinereous (testo muto) */
-
-  /* Accento (principale) */
-  --accent:      ##3C36F3; /* bright indigo (accento principale) */
-  --accent-dark: ##3C36F3; /* bright indigo */
-  --accent-soft: #E8A5A5; /* Blood Red chiaro (per sfondi soft) */
-  --accent-line: ##3C36F3; /* Linea accentuata */
-
-  /* Errori e info */
-  --danger:      #74070E; /* Blood Red (per errori) */
-  --danger-dark: #5A050B; /* Blood Red scuro */
-  --info:        #45462A; /* Drab Dark Brown (per info) */
-  --info-dark:   #2E2F1A; /* Drab Dark Brown scuro */
-
-  /* Ombre */
-  --shadow-sm:   0 1px 4px rgba(70, 70, 42, 0.15);
-  --shadow-md:   0 2px 10px rgba(70, 70, 42, 0.20);
-  --shadow-lg:   0 3px 12px rgba(70, 70, 42, 0.25);
-
+  /* Colori modalita chiara */
+  --bg:          #f0f2f5;
+  --surface:     #ffffff;
+  --surface2:    #fafafa;
+  --border:      #cccccc;
+  --text:        #222222;
+  --text-soft:   #555555;
+  --text-muted:  #999999;
+  --accent:      #2d6a4f;
+  --accent-dark: #1b4332;
+  --accent-soft: #d8f3dc;
+  --accent-line: #d8f3dc;
+  --danger:      #e63946;
+  --danger-dark: #c1121f;
+  --info:        #4E86C8;
+  --info-dark:   #3a6fa8;
+  --shadow-sm:   0 1px 4px rgba(0,0,0,0.08);
+  --shadow-md:   0 2px 10px rgba(0,0,0,0.10);
+  --shadow-lg:   0 3px 12px rgba(0,0,0,0.13);
   /* Colori torta */
-  --pie-prot: #74070E; /* Blood Red */
-  --pie-carb: #F4E3B2; /* Vanilla */
-  --pie-fat:  #45462A; /* Drab Dark Brown */
+  --pie-prot: #E05252;
+  --pie-carb: #F0BC3D;
+  --pie-fat:  #4E86C8;
 }
 
 body.dark {
-  /* Sfondo e superfici */
-  --bg:          #310E10; /* Black Bean (sfondo principale scuro) */
-  --surface:     #45462A; /* Drab Dark Brown (superfici) */
-  --surface2:    #2E2F1A; /* Drab Dark Brown scuro */
-  --border:      #8B7355; /* Cinereous (bordi chiari) */
-
-  /* Testo */
-  --text:        #F4E3B2; /* Vanilla (testo principale) */
-  --text-soft:   #D4C4A8; /* Vanilla soft (testo secondario) */
-  --text-muted:  #A89C85; /* Cinereous chiaro */
-
-  /* Accento (principale) */
-  --accent:      #E8A5A5; /* Blood Red chiaro (accento in dark mode) */
-  --accent-dark: #C28A8A; /* Blood Red medio */
-  --accent-soft: #5A050B; /* Blood Red scuro (per sfondi) */
-  --accent-line: #74070E; /* Linea accentuata */
-
-  /* Errori e info */
-  --danger:      #E8A5A5; /* Blood Red chiaro */
-  --danger-dark: #C28A8A; /* Blood Red medio */
-  --info:        #8B7355; /* Cinereous (per info) */
-  --info-dark:   #6A5A45; /* Cinereous scuro */
-
-  /* Ombre */
-  --shadow-sm:   0 1px 4px rgba(49, 14, 16, 0.40);
-  --shadow-md:   0 2px 10px rgba(49, 14, 16, 0.50);
-  --shadow-lg:   0 3px 12px rgba(49, 14, 16, 0.60);
+  --bg:          #12151e;
+  --surface:     #1c2033;
+  --surface2:    #151825;
+  --border:      #333a50;
+  --text:        #e0e0e0;
+  --text-soft:   #a0a8b8;
+  --text-muted:  #666e80;
+  --accent:      #74c69d;
+  --accent-dark: #52a87a;
+  --accent-soft: #1a3028;
+  --accent-line: #2a4a38;
+  --danger:      #e63946;
+  --danger-dark: #c1121f;
+  --info:        #5b9bd5;
+  --info-dark:   #3a6fa8;
+  --shadow-sm:   0 1px 4px rgba(0,0,0,0.35);
+  --shadow-md:   0 2px 10px rgba(0,0,0,0.45);
+  --shadow-lg:   0 3px 12px rgba(0,0,0,0.55);
 }
 
 html, body {
@@ -555,5 +537,4 @@ body.dark .scadenza-ok     { background: #0f2e1a; border-left-color: #52a87a; }
   transition: border-color 0.2s, color 0.2s;
 }
 .tema-btn:hover, .tema-btn:active { border-color: var(--accent); color: var(--accent); }
-
 
