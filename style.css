@@ -22,9 +22,9 @@
   --shadow-md:   0 2px 10px rgba(0,0,0,0.10);
   --shadow-lg:   0 3px 12px rgba(0,0,0,0.13);
   /* Colori torta */
-  --pie-prot: #E05252;
-  --pie-carb: #F0BC3D;
-  --pie-fat:  #4E86C8;
+  --pie-prot: #8E94F2;
+  --pie-carb: #EE8434;
+  --pie-fat:  #F2F3FF;
 }
 
 body.dark {
