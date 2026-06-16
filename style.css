@@ -429,8 +429,9 @@ body.dark .prodotto { background: #282659; }
 
 /* ===== TASTO TEMA ===== */
 .tema-btn {
-  position: absolute;
-  right: 16px;
+  position: fixed; /* Cambiato da absolute a fixed */
+  bottom: 16px; /* Posizionato in basso */
+  right: 16px; /* Posizionato a destra */
   width: 40px; /* Larghezza fissa per il cerchio */
   height: 40px; /* Altezza fissa per il cerchio */
   border-radius: 50%; /* Forma circolare */
@@ -443,6 +444,7 @@ body.dark .prodotto { background: #282659; }
   color: var(--text-soft);
   cursor: pointer;
   transition: border-color 0.2s, color 0.2s, background 0.2s;
+  z-index: 1000; /* Assicurati che sia sopra gli altri elementi */
 }
 
 .tema-btn:hover, .tema-btn:active {
@@ -454,10 +456,10 @@ body.dark .prodotto { background: #282659; }
 /* ===== STATI SCADENZA ===== */
 .scaduto         { border-left-color: #e63946; }
 .scadenza-vicina { border-left-color: #ffbd2f; }
-.scadenza-ok     { border-left-color: #70e0a8; }
+.scadenza-ok     { border-left-color: #a1da4c; }
 body.dark .scaduto         { border-left-color: #e63946; }
 body.dark .scadenza-vicina { border-left-color: #ffbd2f; }
-body.dark .scadenza-ok     { border-left-color: #70e0a8; }
+body.dark .scadenza-ok     { border-left-color: #a1da4c; }
 
 /* ===== AZIONI PRODOTTO ===== */
 .prodotto-azioni { display: flex; gap: 8px; margin-top: 12px; }
