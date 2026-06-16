@@ -110,7 +110,6 @@ window.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("tags",     JSON.stringify(tags));
       localStorage.setItem("catalogo", JSON.stringify(catalogo));
     } catch(e) {
-      // Su alcuni WebView lo storage puo essere limitato
       console.warn("Salvataggio fallito:", e);
     }
   }
@@ -543,11 +542,12 @@ window.addEventListener("DOMContentLoaded", () => {
       dispensaDiv.appendChild(titolo);
 
       gruppi[tag].forEach(p => {
-        // Classe colore scadenza
+        // Classe colore scadenza:
+        // scaduto -> rosso | scade entro 1 mese -> giallo | oltre 1 mese -> verde
         let classe = "";
         if (p.scadenza) {
           const diff = (new Date(p.scadenza) - new Date()) / 86400000;
-          classe = diff < 0 ? "scaduto" : diff < 7 ? "scadenza-vicina" : "scadenza-ok";
+          classe = diff < 0 ? "scaduto" : diff < 30 ? "scadenza-vicina" : "scadenza-ok";
         }
 
         const cals = p.calorie     ? p.calorie     + " kcal" : "—";
