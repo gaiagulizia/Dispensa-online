@@ -595,9 +595,9 @@ window.addEventListener("DOMContentLoaded", () => {
         const righe = [
           { label: "Valori per 100g:", valore: null, bold: true },
           { label: "Calorie: " + cals, valore: null, bold: false },
-          { label: "Proteine: " + prot, valore: null, bold: false, colore: PIE.proteine },
-          { label: "Carboidrati: " + carb, valore: null, bold: false, colore: "#b08800" },
-          { label: "Grassi: " + gras, valore: null, bold: false, colore: PIE.grassi },
+          { label: "Proteine: " + prot, valore: null, bold: false },
+          { label: "Carboidrati: " + carb, valore: null, bold: false },
+          { label: "Grassi: " + gras, valore: null, bold: false },
         ];
         righe.forEach(r => {
           const el = document.createElement("p");
