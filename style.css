@@ -426,13 +426,28 @@ body.dark .prodotto { background: #282659; }
 .pie-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .pie-pct { font-weight: bold; }
 
+/* ===== TASTO TEMA ===== */
+.tema-btn {
+  position: absolute;
+  right: 16px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-family: 'Times New Roman', Times, serif;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
 /* ===== STATI SCADENZA — solo striscia sinistra, riquadro sempre neutro ===== */
 .scaduto         { border-left-color: #e63946; }
-.scadenza-vicina { border-left-color: #e9a100; }
-.scadenza-ok     { border-left-color: #2d6a4f; }
+.scadenza-vicina { border-left-color: #ffbd2f; }
+.scadenza-ok     { border-left-color: #70e0a8; }
 body.dark .scaduto         { border-left-color: #e63946; }
-body.dark .scadenza-vicina { border-left-color: #e9a100; }
-body.dark .scadenza-ok     { border-left-color: #52a87a; }
+body.dark .scadenza-vicina { border-left-color: #ffbd2f; }
+body.dark .scadenza-ok     { border-left-color: #70e0a8; }
 
 /* ===== AZIONI PRODOTTO ===== */
 .prodotto-azioni { display: flex; gap: 8px; margin-top: 12px; }
@@ -523,18 +538,4 @@ body.dark .scadenza-ok     { border-left-color: #52a87a; }
 .modale-azioni .btn-primario,
 .modale-azioni .btn-secondario { margin: 0; }
 
-/* ===== TASTO TEMA ===== */
-.tema-btn {
-  position: absolute;
-  right: 16px;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-family: 'Times New Roman', Times, serif;
-  border: 1.5px solid var(--border);
-  border-radius: 20px;
-  background: var(--surface);
-  color: var(--text-soft);
-  cursor: pointer;
-  transition: border-color 0.2s, color 0.2s;
-}
 .tema-btn:hover, .tema-btn:active { border-color: var(--accent); color: var(--accent); }
