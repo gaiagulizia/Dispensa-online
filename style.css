@@ -24,7 +24,7 @@
   /* Colori torta */
   --pie-prot: #8E94F2;
   --pie-carb: #EE8434;
-  --pie-fat:  #F2F3FF;
+  --pie-fat:  #a1da4c;
 }
 
 body.dark {
@@ -517,6 +517,24 @@ body.dark .scadenza-ok     { border-left-color: #a1da4c; }
   font-family: Arial, sans-serif; /* Cambiato font */
 }
 #listaTagGestione li:last-child { border-bottom: none; }
+
+.tag-drag-handle {
+  cursor: grab;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-muted);
+  padding: 4px 6px;
+  touch-action: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+.tag-drag-handle:active { cursor: grabbing; }
+
+#listaTagGestione li.dragging {
+  opacity: 0.6;
+  background: var(--accent-soft);
+  border-radius: 8px;
+}
 
 .tag-edit-input {
   flex: 1;
