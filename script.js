@@ -318,34 +318,74 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // ============================================================
   // RIORDINO TAG (tieni premuto e trascina)
+  // Il blocco "fantasma" segue il dito 1:1; l'elemento originale
+  // resta invisibile come segnaposto e si riordina di conseguenza.
   // ============================================================
   function abilitaDragTag(li, handle) {
     let longPressTimer = null;
     let dragging = false;
-    let startY = 0;
+    let startX = 0, startY = 0;
+    let lastX = 0, lastY = 0;
     let activePointerId = null;
+    let ghost = null;
+    let ghostOffsetX = 0, ghostOffsetY = 0;
 
-    function onPointerMove(e) {
-      if (activePointerId !== null && e.pointerId !== activePointerId) return;
-      if (!dragging) {
-        if (Math.abs(e.clientY - startY) > 10) clearTimeout(longPressTimer);
-        return;
-      }
-      e.preventDefault();
-      const y = e.clientY;
-      const siblings = Array.from(listaTagGest.children);
-      for (const sib of siblings) {
+    function creaGhost(x, y) {
+      const rect = li.getBoundingClientRect();
+      ghost = li.cloneNode(true);
+      ghost.classList.add("tag-ghost");
+      ghost.style.left   = rect.left + "px";
+      ghost.style.top    = rect.top + "px";
+      ghost.style.width  = rect.width + "px";
+      document.body.appendChild(ghost);
+      ghostOffsetX = x - rect.left;
+      ghostOffsetY = y - rect.top;
+      li.classList.add("dragging-source");
+    }
+
+    function spostaGhost(x, y) {
+      if (!ghost) return;
+      ghost.style.left = (x - ghostOffsetX) + "px";
+      ghost.style.top  = (y - ghostOffsetY) + "px";
+    }
+
+    function rimuoviGhost() {
+      if (ghost) { ghost.remove(); ghost = null; }
+      li.classList.remove("dragging-source");
+    }
+
+    function valutaScambio(pointerY) {
+      const children = Array.from(listaTagGest.children);
+      const liIndex = children.indexOf(li);
+      for (let i = 0; i < children.length; i++) {
+        const sib = children[i];
         if (sib === li) continue;
         const rect = sib.getBoundingClientRect();
         const mid = rect.top + rect.height / 2;
-        if (y < mid && sib.previousElementSibling !== li) {
+        if (i < liIndex && pointerY < mid) {
           listaTagGest.insertBefore(li, sib);
-          break;
-        } else if (y >= mid && sib.nextElementSibling !== li) {
+          return;
+        }
+        if (i > liIndex && pointerY > mid) {
           listaTagGest.insertBefore(li, sib.nextSibling);
-          break;
+          return;
         }
       }
+    }
+
+    function onPointerMove(e) {
+      if (activePointerId !== null && e.pointerId !== activePointerId) return;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      if (!dragging) {
+        if (Math.abs(e.clientY - startY) > 10 || Math.abs(e.clientX - startX) > 10) {
+          clearTimeout(longPressTimer);
+        }
+        return;
+      }
+      e.preventDefault();
+      spostaGhost(e.clientX, e.clientY);
+      valutaScambio(e.clientY);
     }
 
     function onPointerUp(e) {
@@ -355,8 +395,8 @@ window.addEventListener("DOMContentLoaded", () => {
       handle.removeEventListener("pointerup", onPointerUp);
       handle.removeEventListener("pointercancel", onPointerUp);
       if (dragging) {
-        li.classList.remove("dragging");
         dragging = false;
+        rimuoviGhost();
         finalizzaOrdineTag();
       }
       activePointerId = null;
@@ -365,11 +405,12 @@ window.addEventListener("DOMContentLoaded", () => {
     handle.addEventListener("pointerdown", e => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
       activePointerId = e.pointerId;
-      startY = e.clientY;
+      startX = e.clientX; startY = e.clientY;
+      lastX  = e.clientX; lastY  = e.clientY;
       dragging = false;
       longPressTimer = setTimeout(() => {
         dragging = true;
-        li.classList.add("dragging");
+        creaGhost(lastX, lastY);
         try { handle.setPointerCapture(activePointerId); } catch(err) {}
       }, 350);
       handle.addEventListener("pointermove", onPointerMove);
