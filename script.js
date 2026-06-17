@@ -255,6 +255,12 @@ window.addEventListener("DOMContentLoaded", () => {
     } else {
       tags.forEach((t, i) => {
         const li = document.createElement("li");
+        li.dataset.tagName = t;
+
+        const handle = document.createElement("span");
+        handle.className = "tag-drag-handle";
+        handle.textContent = "\u2630";
+        handle.setAttribute("aria-label", "Tieni premuto per riordinare");
 
         const inp = document.createElement("input");
         inp.className = "tag-edit-input";
@@ -297,14 +303,93 @@ window.addEventListener("DOMContentLoaded", () => {
           apriModaleTag();
         });
 
+        li.appendChild(handle);
         li.appendChild(inp);
         li.appendChild(btnS);
         li.appendChild(btnE);
         listaTagGest.appendChild(li);
+
+        abilitaDragTag(li, handle);
       });
     }
 
     modaleTag.classList.remove("hidden");
+  }
+
+  // ============================================================
+  // RIORDINO TAG (tieni premuto e trascina)
+  // ============================================================
+  function abilitaDragTag(li, handle) {
+    let longPressTimer = null;
+    let dragging = false;
+    let startY = 0;
+    let activePointerId = null;
+
+    function onPointerMove(e) {
+      if (activePointerId !== null && e.pointerId !== activePointerId) return;
+      if (!dragging) {
+        if (Math.abs(e.clientY - startY) > 10) clearTimeout(longPressTimer);
+        return;
+      }
+      e.preventDefault();
+      const y = e.clientY;
+      const siblings = Array.from(listaTagGest.children);
+      for (const sib of siblings) {
+        if (sib === li) continue;
+        const rect = sib.getBoundingClientRect();
+        const mid = rect.top + rect.height / 2;
+        if (y < mid && sib.previousElementSibling !== li) {
+          listaTagGest.insertBefore(li, sib);
+          break;
+        } else if (y >= mid && sib.nextElementSibling !== li) {
+          listaTagGest.insertBefore(li, sib.nextSibling);
+          break;
+        }
+      }
+    }
+
+    function onPointerUp(e) {
+      if (activePointerId !== null && e.pointerId !== activePointerId) return;
+      clearTimeout(longPressTimer);
+      handle.removeEventListener("pointermove", onPointerMove);
+      handle.removeEventListener("pointerup", onPointerUp);
+      handle.removeEventListener("pointercancel", onPointerUp);
+      if (dragging) {
+        li.classList.remove("dragging");
+        dragging = false;
+        finalizzaOrdineTag();
+      }
+      activePointerId = null;
+    }
+
+    handle.addEventListener("pointerdown", e => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      activePointerId = e.pointerId;
+      startY = e.clientY;
+      dragging = false;
+      longPressTimer = setTimeout(() => {
+        dragging = true;
+        li.classList.add("dragging");
+        try { handle.setPointerCapture(activePointerId); } catch(err) {}
+      }, 350);
+      handle.addEventListener("pointermove", onPointerMove);
+      handle.addEventListener("pointerup", onPointerUp);
+      handle.addEventListener("pointercancel", onPointerUp);
+    });
+  }
+
+  function finalizzaOrdineTag() {
+    const nuovoOrdine = Array.from(listaTagGest.children)
+      .map(el => el.dataset.tagName)
+      .filter(Boolean);
+    if (nuovoOrdine.length === tags.length) {
+      pushUndo();
+      tags = nuovoOrdine;
+      salva();
+      aggiornaTagSelect();
+      aggiornaTagBar();
+      apriModaleTag();
+    }
   }
 
   chiudiModaleTag.addEventListener("click", () => modaleTag.classList.add("hidden"));
@@ -413,7 +498,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const PIE = {
     proteine:    "#8e94f2",
     carboidrati: "#ee8434",
-    grassi:      "#f2f3ff",
+    grassi:      "#a1da4c",
   };
 
   function buildPie(carboidrati, proteine, grassi) {
@@ -492,6 +577,112 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================================================
+  // CREAZIONE CARD PRODOTTO
+  // ============================================================
+  function creaCardProdotto(p) {
+    // Classe colore scadenza:
+    // scaduto -> rosso | scade entro 1 mese -> giallo | oltre 1 mese -> verde
+    let classe = "";
+    if (p.scadenza) {
+      const diff = (new Date(p.scadenza) - new Date()) / 86400000;
+      classe = diff < 0 ? "scaduto" : diff < 30 ? "scadenza-vicina" : "scadenza-ok";
+    }
+
+    const cals = p.calorie     ? p.calorie     + " kcal" : "—";
+    const prot = p.proteine    ? p.proteine    + " g"    : "—";
+    const carb = p.carboidrati ? p.carboidrati + " g"    : "—";
+    const gras = p.grassi      ? p.grassi      + " g"    : "—";
+    const qta  = p.quantita    ? p.quantita + " " + (p.unita || "") : "";
+
+    const card = document.createElement("div");
+    card.className = "prodotto " + classe;
+
+    // Nome (cliccabile per espandere)
+    const nomeEl = document.createElement("div");
+    nomeEl.className = "prodotto-nome" + (p.expanded ? " aperto" : "");
+    const chevron = document.createElement("span");
+    chevron.className = "chevron";
+    chevron.textContent = "\u25B6";
+    nomeEl.appendChild(chevron);
+    const nomeTxt = document.createTextNode(p.nome);
+    nomeEl.appendChild(nomeTxt);
+    if (qta) {
+      const qtaEl = document.createElement("span");
+      qtaEl.style.cssText = "font-weight:normal;font-size:13px;color:var(--text-muted);margin-left:4px;";
+      qtaEl.textContent = "(" + qta.trim() + ")";
+      nomeEl.appendChild(qtaEl);
+    }
+
+    // Data scadenza
+    const dataEl = document.createElement("p");
+    dataEl.className = "prodotto-data";
+    dataEl.textContent = "Scadenza: " + (p.scadenza || "non impostata");
+
+    // Sezione espandibile
+    const extra = document.createElement("div");
+    extra.className = "extra";
+    extra.style.display = p.expanded ? "block" : "none";
+
+    // Valori + torta
+    const inner = document.createElement("div");
+    inner.className = "extra-inner";
+
+    const valori = document.createElement("div");
+    valori.className = "extra-valori";
+
+    const righe = [
+      { label: "Valori per 100g:", valore: null, bold: true },
+      { label: "Calorie: " + cals, valore: null, bold: false },
+      { label: "Proteine: " + prot, valore: null, bold: false },
+      { label: "Carboidrati: " + carb, valore: null, bold: false },
+      { label: "Grassi: " + gras, valore: null, bold: false },
+    ];
+    righe.forEach(r => {
+      const el = document.createElement("p");
+      if (r.bold) { const s = document.createElement("strong"); s.textContent = r.label; el.appendChild(s); }
+      else { el.textContent = r.label; }
+      if (r.colore) { el.style.color = r.colore; el.style.fontWeight = "600"; }
+      valori.appendChild(el);
+    });
+
+    inner.appendChild(valori);
+    inner.appendChild(buildPie(p.carboidrati, p.proteine, p.grassi));
+    extra.appendChild(inner);
+
+    // Bottoni azione
+    const azioni = document.createElement("div");
+    azioni.className = "prodotto-azioni";
+
+    const btnMod = document.createElement("button");
+    btnMod.className = "btn-modifica";
+    btnMod.textContent = "Modifica";
+    btnMod.addEventListener("click", e => { e.stopPropagation(); apriModaleModifica(p.realIndex); });
+
+    const btnRim = document.createElement("button");
+    btnRim.className = "btn-rimuovi";
+    btnRim.textContent = "Rimuovi";
+    btnRim.addEventListener("click", e => { e.stopPropagation(); rimuovi(p.realIndex); });
+
+    azioni.appendChild(btnMod);
+    azioni.appendChild(btnRim);
+    extra.appendChild(azioni);
+
+    card.appendChild(nomeEl);
+    card.appendChild(dataEl);
+    card.appendChild(extra);
+
+    // Toggle espandi/chiudi solo sul nome
+    nomeEl.addEventListener("click", e => {
+      e.stopPropagation();
+      dispensa[p.realIndex].expanded = !dispensa[p.realIndex].expanded;
+      salva();
+      render();
+    });
+
+    return card;
+  }
+
+  // ============================================================
   // RENDER LISTA PRODOTTI
   // ============================================================
   function render() {
@@ -525,125 +716,34 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Raggruppa per tag mantenendo l'ordine corrente
-    const gruppi = {};
-    const ordineGruppi = [];
-    lista.forEach(p => {
-      const ri = dispensa.indexOf(p);
-      const k  = p.tag || "";
-      if (!gruppi[k]) { gruppi[k] = []; ordineGruppi.push(k); }
-      gruppi[k].push({ ...p, realIndex: ri });
-    });
-
-    ordineGruppi.forEach(tag => {
-      const titolo = document.createElement("div");
-      titolo.className = "tag-title";
-      titolo.textContent = tag || "Senza tag";
-      dispensaDiv.appendChild(titolo);
-
-      gruppi[tag].forEach(p => {
-        // Classe colore scadenza:
-        // scaduto -> rosso | scade entro 1 mese -> giallo | oltre 1 mese -> verde
-        let classe = "";
-        if (p.scadenza) {
-          const diff = (new Date(p.scadenza) - new Date()) / 86400000;
-          classe = diff < 0 ? "scaduto" : diff < 30 ? "scadenza-vicina" : "scadenza-ok";
-        }
-
-        const cals = p.calorie     ? p.calorie     + " kcal" : "—";
-        const prot = p.proteine    ? p.proteine    + " g"    : "—";
-        const carb = p.carboidrati ? p.carboidrati + " g"    : "—";
-        const gras = p.grassi      ? p.grassi      + " g"    : "—";
-        const qta  = p.quantita    ? p.quantita + " " + (p.unita || "") : "";
-
-        const card = document.createElement("div");
-        card.className = "prodotto " + classe;
-
-        // Nome (cliccabile per espandere)
-        const nomeEl = document.createElement("div");
-        nomeEl.className = "prodotto-nome" + (p.expanded ? " aperto" : "");
-        const chevron = document.createElement("span");
-        chevron.className = "chevron";
-        chevron.textContent = "\u25B6";
-        nomeEl.appendChild(chevron);
-        const nomeTxt = document.createTextNode(p.nome);
-        nomeEl.appendChild(nomeTxt);
-        if (qta) {
-          const qtaEl = document.createElement("span");
-          qtaEl.style.cssText = "font-weight:normal;font-size:13px;color:var(--text-muted);margin-left:4px;";
-          qtaEl.textContent = "(" + qta.trim() + ")";
-          nomeEl.appendChild(qtaEl);
-        }
-
-        // Data scadenza
-        const dataEl = document.createElement("p");
-        dataEl.className = "prodotto-data";
-        dataEl.textContent = "Scadenza: " + (p.scadenza || "non impostata");
-
-        // Sezione espandibile
-        const extra = document.createElement("div");
-        extra.className = "extra";
-        extra.style.display = p.expanded ? "block" : "none";
-
-        // Valori + torta
-        const inner = document.createElement("div");
-        inner.className = "extra-inner";
-
-        const valori = document.createElement("div");
-        valori.className = "extra-valori";
-
-        const righe = [
-          { label: "Valori per 100g:", valore: null, bold: true },
-          { label: "Calorie: " + cals, valore: null, bold: false },
-          { label: "Proteine: " + prot, valore: null, bold: false },
-          { label: "Carboidrati: " + carb, valore: null, bold: false },
-          { label: "Grassi: " + gras, valore: null, bold: false },
-        ];
-        righe.forEach(r => {
-          const el = document.createElement("p");
-          if (r.bold) { const s = document.createElement("strong"); s.textContent = r.label; el.appendChild(s); }
-          else { el.textContent = r.label; }
-          if (r.colore) { el.style.color = r.colore; el.style.fontWeight = "600"; }
-          valori.appendChild(el);
-        });
-
-        inner.appendChild(valori);
-        inner.appendChild(buildPie(p.carboidrati, p.proteine, p.grassi));
-        extra.appendChild(inner);
-
-        // Bottoni azione
-        const azioni = document.createElement("div");
-        azioni.className = "prodotto-azioni";
-
-        const btnMod = document.createElement("button");
-        btnMod.className = "btn-modifica";
-        btnMod.textContent = "Modifica";
-        btnMod.addEventListener("click", e => { e.stopPropagation(); apriModaleModifica(p.realIndex); });
-
-        const btnRim = document.createElement("button");
-        btnRim.className = "btn-rimuovi";
-        btnRim.textContent = "Rimuovi";
-        btnRim.addEventListener("click", e => { e.stopPropagation(); rimuovi(p.realIndex); });
-
-        azioni.appendChild(btnMod);
-        azioni.appendChild(btnRim);
-        extra.appendChild(azioni);
-
-        card.appendChild(nomeEl);
-        card.appendChild(dataEl);
-        card.appendChild(extra);
-
-        // Toggle espandi/chiudi solo sul nome
-        nomeEl.addEventListener("click", e => {
-          e.stopPropagation();
-          dispensa[p.realIndex].expanded = !dispensa[p.realIndex].expanded;
-          salva();
-          render();
-        });
-
-        dispensaDiv.appendChild(card);
+    if (ordinamento === "data") {
+      // Ordine di default: raggruppato per tag/categoria
+      const gruppi = {};
+      const ordineGruppi = [];
+      lista.forEach(p => {
+        const ri = dispensa.indexOf(p);
+        const k  = p.tag || "";
+        if (!gruppi[k]) { gruppi[k] = []; ordineGruppi.push(k); }
+        gruppi[k].push({ ...p, realIndex: ri });
       });
-    });
+
+      ordineGruppi.forEach(tag => {
+        const titolo = document.createElement("div");
+        titolo.className = "tag-title";
+        titolo.textContent = tag || "Senza tag";
+        dispensaDiv.appendChild(titolo);
+
+        gruppi[tag].forEach(p => {
+          dispensaDiv.appendChild(creaCardProdotto(p));
+        });
+      });
+    } else {
+      // Ordinamento per criterio scelto: lista unica, indipendente dal tag
+      lista.forEach(p => {
+        const ri = dispensa.indexOf(p);
+        dispensaDiv.appendChild(creaCardProdotto({ ...p, realIndex: ri }));
+      });
+    }
   }
 
   // ============================================================
