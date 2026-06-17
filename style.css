@@ -530,10 +530,25 @@ body.dark .scadenza-ok     { border-left-color: #a1da4c; }
 }
 .tag-drag-handle:active { cursor: grabbing; }
 
-#listaTagGestione li.dragging {
-  opacity: 0.6;
-  background: var(--accent-soft);
-  border-radius: 8px;
+#listaTagGestione li.dragging-source {
+  opacity: 0;
+}
+
+.tag-ghost {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: Arial, sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  pointer-events: none;
+  z-index: 9999;
+  list-style: none;
 }
 
 .tag-edit-input {
