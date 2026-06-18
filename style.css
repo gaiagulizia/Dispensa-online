@@ -583,3 +583,90 @@ body.dark .scadenza-ok     { border-left-color: #a1da4c; }
 .modale-azioni { display: flex; gap: 10px; margin-top: 16px; }
 .modale-azioni .btn-primario,
 .modale-azioni .btn-secondario { margin: 0; }
+
+/* ===== TAB CONFRONTA ===== */
+.confronta-hint {
+  font-size: 13px;
+  color: var(--text-soft);
+  margin-bottom: 14px;
+}
+
+.confronto-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.confronto-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, opacity 0.2s;
+}
+.confronto-item:hover { border-color: var(--accent); }
+.confronto-item.selezionato {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.confronto-item.disabilitato { opacity: 0.4; cursor: not-allowed; }
+
+.confronto-item input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+.confronto-item .confronto-nome {
+  flex: 1;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.confronto-item .confronto-tag {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.confronto-grafici {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.confronto-grafico-blocco h4 {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.confronto-grafico-blocco svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.confronto-grafico-blocco .barra-valore { fill: var(--text); font-family: Arial, sans-serif; }
+.confronto-grafico-blocco .barra-nome   { fill: var(--text-soft); font-family: Arial, sans-serif; }
+.confronto-grafico-blocco .barra-base   { stroke: var(--border); }
+
+.confronto-vuoto {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 14px;
+  text-align: center;
+  padding: 18px 0;
+}
