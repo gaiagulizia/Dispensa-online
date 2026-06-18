@@ -25,6 +25,7 @@
   <nav class="tab-bar">
     <button class="tab-btn attivo" data-tab="aggiungi">Aggiungi</button>
     <button class="tab-btn" data-tab="dispensa">Dispensa</button>
+    <button class="tab-btn" data-tab="confronta">Confronta</button>
   </nav>
 
   <!-- TAB: AGGIUNGI PRODOTTO -->
@@ -92,6 +93,8 @@
           <option value="data">Data aggiunta</option>
           <option value="scadenza_asc">Scadenza (prima)</option>
           <option value="alfabetico">Alfabetico</option>
+          <option value="calorie_desc">Calorie (più)</option>
+          <option value="calorie_asc">Calorie (meno)</option>
           <option value="proteine_desc">Proteine (più)</option>
           <option value="proteine_asc">Proteine (meno)</option>
           <option value="carboidrati_desc">Carboidrati (più)</option>
@@ -106,6 +109,16 @@
 
       <!-- Lista prodotti -->
       <div id="dispensa"></div>
+    </section>
+  </main>
+
+  <!-- TAB: CONFRONTA ALIMENTI -->
+  <main id="tab-confronta" class="tab-content hidden">
+    <section class="card">
+      <h2>Confronta alimenti</h2>
+      <p class="confronta-hint">Seleziona fino a 5 alimenti dalla dispensa per confrontare i loro valori nutrizionali (per 100g).</p>
+      <div id="confrontoLista" class="confronto-lista"></div>
+      <div id="confrontoGrafici" class="confronto-grafici"></div>
     </section>
   </main>
 
