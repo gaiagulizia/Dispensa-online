@@ -248,6 +248,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // MODALE GESTIONE TAG
   // ============================================================
   function apriModaleTag() {
+    pulisciDragResidui();
     listaTagGest.innerHTML = "";
 
     if (tags.length === 0) {
@@ -317,41 +318,42 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================================================
-  // RIORDINO TAG (tieni premuto e trascina)
-  // Il blocco "fantasma" segue il dito 1:1; l'elemento originale
-  // resta invisibile come segnaposto e si riordina di conseguenza.
+  // RIORDINO TAG (tieni premuto e trascina, SOLO verticale)
+  // Il fantasma segue il dito in verticale; la coordinata
+  // orizzontale resta sempre fissa. Gli ascoltatori sono
+  // registrati su document (non sull'elemento) per evitare
+  // che il drag si blocchi durante il gesto.
   // ============================================================
+  function pulisciDragResidui() {
+    document.querySelectorAll(".tag-ghost").forEach(g => g.remove());
+    document.querySelectorAll("#listaTagGestione li.dragging-source")
+      .forEach(l => l.classList.remove("dragging-source"));
+  }
+
   function abilitaDragTag(li, handle) {
     let longPressTimer = null;
     let dragging = false;
     let startX = 0, startY = 0;
-    let lastX = 0, lastY = 0;
-    let activePointerId = null;
     let ghost = null;
-    let ghostOffsetX = 0, ghostOffsetY = 0;
+    let ghostOffsetY = 0;
 
-    function creaGhost(x, y) {
+    function creaGhost(y) {
       const rect = li.getBoundingClientRect();
       ghost = li.cloneNode(true);
       ghost.classList.add("tag-ghost");
-      ghost.style.left   = rect.left + "px";
-      ghost.style.top    = rect.top + "px";
-      ghost.style.width  = rect.width + "px";
+      ghost.style.left  = rect.left + "px";
+      ghost.style.top   = rect.top + "px";
+      ghost.style.width = rect.width + "px";
       document.body.appendChild(ghost);
-      ghostOffsetX = x - rect.left;
       ghostOffsetY = y - rect.top;
       li.classList.add("dragging-source");
     }
 
-    function spostaGhost(x, y) {
+    function spostaGhost(y) {
       if (!ghost) return;
-      ghost.style.left = (x - ghostOffsetX) + "px";
-      ghost.style.top  = (y - ghostOffsetY) + "px";
-    }
-
-    function rimuoviGhost() {
-      if (ghost) { ghost.remove(); ghost = null; }
-      li.classList.remove("dragging-source");
+      // Solo verticale: la posizione orizzontale del fantasma
+      // non viene mai aggiornata, resta quella iniziale.
+      ghost.style.top = (y - ghostOffsetY) + "px";
     }
 
     function valutaScambio(pointerY) {
@@ -373,50 +375,45 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    function onPointerMove(e) {
-      if (activePointerId !== null && e.pointerId !== activePointerId) return;
-      lastX = e.clientX;
-      lastY = e.clientY;
+    function onMove(e) {
+      const y = e.clientY, x = e.clientX;
       if (!dragging) {
-        if (Math.abs(e.clientY - startY) > 10 || Math.abs(e.clientX - startX) > 10) {
+        if (Math.abs(y - startY) > 10 || Math.abs(x - startX) > 10) {
           clearTimeout(longPressTimer);
         }
         return;
       }
-      e.preventDefault();
-      spostaGhost(e.clientX, e.clientY);
-      valutaScambio(e.clientY);
+      if (e.cancelable) e.preventDefault();
+      spostaGhost(y);
+      valutaScambio(y);
     }
 
-    function onPointerUp(e) {
-      if (activePointerId !== null && e.pointerId !== activePointerId) return;
+    function onEnd() {
       clearTimeout(longPressTimer);
-      handle.removeEventListener("pointermove", onPointerMove);
-      handle.removeEventListener("pointerup", onPointerUp);
-      handle.removeEventListener("pointercancel", onPointerUp);
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onEnd);
+      document.removeEventListener("pointercancel", onEnd);
       if (dragging) {
         dragging = false;
-        rimuoviGhost();
+        pulisciDragResidui();
         finalizzaOrdineTag();
       }
-      activePointerId = null;
     }
 
     handle.addEventListener("pointerdown", e => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
-      activePointerId = e.pointerId;
       startX = e.clientX; startY = e.clientY;
-      lastX  = e.clientX; lastY  = e.clientY;
       dragging = false;
       longPressTimer = setTimeout(() => {
         dragging = true;
-        creaGhost(lastX, lastY);
-        try { handle.setPointerCapture(activePointerId); } catch(err) {}
+        creaGhost(startY);
       }, 350);
-      handle.addEventListener("pointermove", onPointerMove);
-      handle.addEventListener("pointerup", onPointerUp);
-      handle.addEventListener("pointercancel", onPointerUp);
+      document.addEventListener("pointermove", onMove, { passive: false });
+      document.addEventListener("pointerup", onEnd);
+      document.addEventListener("pointercancel", onEnd);
     });
+
+    handle.addEventListener("contextmenu", e => e.preventDefault());
   }
 
   function finalizzaOrdineTag() {
@@ -433,8 +430,16 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  chiudiModaleTag.addEventListener("click", () => modaleTag.classList.add("hidden"));
-  modaleTag.addEventListener("click", e => { if (e.target === modaleTag) modaleTag.classList.add("hidden"); });
+  chiudiModaleTag.addEventListener("click", () => {
+    pulisciDragResidui();
+    modaleTag.classList.add("hidden");
+  });
+  modaleTag.addEventListener("click", e => {
+    if (e.target === modaleTag) {
+      pulisciDragResidui();
+      modaleTag.classList.add("hidden");
+    }
+  });
 
   // ============================================================
   // MODALE MODIFICA PRODOTTO
