@@ -41,6 +41,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const target = btn.dataset.tab;
       tabBtns.forEach(b => b.classList.toggle("attivo", b.dataset.tab === target));
       tabContents.forEach(c => c.classList.toggle("hidden", c.id !== "tab-" + target));
+      if (target === "confronta") renderConfronto();
     });
   });
 
@@ -522,6 +523,10 @@ window.addEventListener("DOMContentLoaded", () => {
         break;
       case "alfabetico":
         c.sort((a, b) => a.nome.localeCompare(b.nome, "it")); break;
+      case "calorie_desc":
+        c.sort((a, b) => (parseFloat(b.calorie)||0)     - (parseFloat(a.calorie)||0));     break;
+      case "calorie_asc":
+        c.sort((a, b) => (parseFloat(a.calorie)||0)     - (parseFloat(b.calorie)||0));     break;
       case "proteine_desc":
         c.sort((a, b) => (parseFloat(b.proteine)||0)    - (parseFloat(a.proteine)||0));    break;
       case "proteine_asc":
@@ -620,6 +625,176 @@ window.addEventListener("DOMContentLoaded", () => {
 
     wrap.appendChild(legend);
     return wrap;
+  }
+
+  // ============================================================
+  // TAB CONFRONTA — selezione alimenti + grafici a barre
+  // ============================================================
+  const confrontoLista   = document.getElementById("confrontoLista");
+  const confrontoGrafici = document.getElementById("confrontoGrafici");
+
+  // Colori: stessi assegnati ai valori nutrizionali nel resto dell'app;
+  // per le calorie si usa l'azzurro del tasto "Modifica".
+  const COLORI_CONFRONTO = {
+    calorie:     "#4E86C8",
+    proteine:    PIE.proteine,
+    carboidrati: PIE.carboidrati,
+    grassi:      PIE.grassi,
+  };
+
+  const CONFRONTO_METRICHE = [
+    { chiave: "calorie",     etichetta: "Calorie",     unita: "kcal", colore: COLORI_CONFRONTO.calorie     },
+    { chiave: "proteine",    etichetta: "Proteine",    unita: "g",    colore: COLORI_CONFRONTO.proteine    },
+    { chiave: "carboidrati", etichetta: "Carboidrati", unita: "g",    colore: COLORI_CONFRONTO.carboidrati },
+    { chiave: "grassi",      etichetta: "Grassi",      unita: "g",    colore: COLORI_CONFRONTO.grassi      },
+  ];
+
+  let confrontoSelezionati = []; // indici dell'array "dispensa" attualmente selezionati
+
+  function renderConfronto() {
+    confrontoSelezionati = [];
+    confrontoLista.innerHTML = "";
+
+    if (!dispensa.length) {
+      confrontoLista.innerHTML = `<p class="confronto-vuoto">Non ci sono alimenti in dispensa.</p>`;
+      confrontoGrafici.innerHTML = "";
+      return;
+    }
+
+    dispensa.forEach((p, idx) => {
+      const item = document.createElement("label");
+      item.className = "confronto-item";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+
+      const nomeSpan = document.createElement("span");
+      nomeSpan.className = "confronto-nome";
+      nomeSpan.textContent = p.nome;
+
+      const tagSpan = document.createElement("span");
+      tagSpan.className = "confronto-tag";
+      tagSpan.textContent = p.tag || "Senza tag";
+
+      cb.addEventListener("change", () => {
+        if (cb.checked) {
+          if (confrontoSelezionati.length >= 5) {
+            cb.checked = false;
+            alert("Puoi selezionare al massimo 5 alimenti.");
+            return;
+          }
+          confrontoSelezionati.push(idx);
+          item.classList.add("selezionato");
+        } else {
+          confrontoSelezionati = confrontoSelezionati.filter(i => i !== idx);
+          item.classList.remove("selezionato");
+        }
+        aggiornaStatoCheckboxConfronto();
+        aggiornaGraficiConfronto();
+      });
+
+      item.appendChild(cb);
+      item.appendChild(nomeSpan);
+      item.appendChild(tagSpan);
+      confrontoLista.appendChild(item);
+    });
+
+    aggiornaGraficiConfronto();
+  }
+
+  function aggiornaStatoCheckboxConfronto() {
+    const pieno = confrontoSelezionati.length >= 5;
+    confrontoLista.querySelectorAll(".confronto-item").forEach(item => {
+      const cb = item.querySelector("input[type=checkbox]");
+      if (!cb.checked) {
+        cb.disabled = pieno;
+        item.classList.toggle("disabilitato", pieno);
+      }
+    });
+  }
+
+  function aggiornaGraficiConfronto() {
+    confrontoGrafici.innerHTML = "";
+
+    if (!confrontoSelezionati.length) {
+      confrontoGrafici.innerHTML = `<p class="confronto-vuoto">Seleziona almeno un alimento per vedere il confronto.</p>`;
+      return;
+    }
+
+    const foods = confrontoSelezionati.map(idx => dispensa[idx]);
+    CONFRONTO_METRICHE.forEach(metrica => {
+      confrontoGrafici.appendChild(buildBarChart(metrica, foods));
+    });
+  }
+
+  function buildBarChart(metrica, foods) {
+    const blocco = document.createElement("div");
+    blocco.className = "confronto-grafico-blocco";
+
+    const titolo = document.createElement("h4");
+    titolo.textContent = `${metrica.etichetta} (${metrica.unita} per 100g)`;
+    blocco.appendChild(titolo);
+
+    const valori = foods.map(f => parseFloat(f[metrica.chiave]) || 0);
+    const max = Math.max(...valori, 1) * 1.18;
+
+    const W = 320, H = 180;
+    const padBottom = 34, padTop = 22, padSide = 14;
+    const n = foods.length;
+    const slotW = (W - padSide * 2) / n;
+    const barW = Math.min(slotW * 0.55, 46);
+
+    const NS  = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+    const baseLine = document.createElementNS(NS, "line");
+    baseLine.setAttribute("class", "barra-base");
+    baseLine.setAttribute("x1", padSide);
+    baseLine.setAttribute("x2", W - padSide);
+    baseLine.setAttribute("y1", H - padBottom);
+    baseLine.setAttribute("y2", H - padBottom);
+    baseLine.setAttribute("stroke-width", "1");
+    svg.appendChild(baseLine);
+
+    foods.forEach((f, i) => {
+      const val   = valori[i];
+      const barH  = max > 0 ? (val / max) * (H - padBottom - padTop) : 0;
+      const cx    = padSide + slotW * i + slotW / 2;
+      const x     = cx - barW / 2;
+      const y     = H - padBottom - barH;
+
+      const rect = document.createElementNS(NS, "rect");
+      rect.setAttribute("x", x.toFixed(1));
+      rect.setAttribute("y", y.toFixed(1));
+      rect.setAttribute("width", barW.toFixed(1));
+      rect.setAttribute("height", Math.max(barH, 0).toFixed(1));
+      rect.setAttribute("rx", "4");
+      rect.setAttribute("fill", metrica.colore);
+      svg.appendChild(rect);
+
+      const valText = document.createElementNS(NS, "text");
+      valText.setAttribute("class", "barra-valore");
+      valText.setAttribute("x", cx.toFixed(1));
+      valText.setAttribute("y", (y - 6).toFixed(1));
+      valText.setAttribute("text-anchor", "middle");
+      valText.setAttribute("font-size", "11");
+      valText.textContent = (val % 1 === 0) ? val : val.toFixed(1);
+      svg.appendChild(valText);
+
+      const nomeText = document.createElementNS(NS, "text");
+      nomeText.setAttribute("class", "barra-nome");
+      nomeText.setAttribute("x", cx.toFixed(1));
+      nomeText.setAttribute("y", (H - padBottom + 16).toFixed(1));
+      nomeText.setAttribute("text-anchor", "middle");
+      nomeText.setAttribute("font-size", "10");
+      nomeText.textContent = f.nome.length > 10 ? f.nome.slice(0, 9) + "…" : f.nome;
+      svg.appendChild(nomeText);
+    });
+
+    blocco.appendChild(svg);
+    return blocco;
   }
 
   // ============================================================
