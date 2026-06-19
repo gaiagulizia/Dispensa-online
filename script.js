@@ -42,6 +42,7 @@ window.addEventListener("DOMContentLoaded", () => {
       tabBtns.forEach(b => b.classList.toggle("attivo", b.dataset.tab === target));
       tabContents.forEach(c => c.classList.toggle("hidden", c.id !== "tab-" + target));
       if (target === "confronta") renderConfronto();
+      if (target === "unisci")   renderUnisci();
     });
   });
 
@@ -1065,6 +1066,262 @@ window.addEventListener("DOMContentLoaded", () => {
     salva();
     aggiornaTagBar();
     render();
+  }
+
+  // ============================================================
+  // TAB UNISCI — combina fino a 10 alimenti con grammi liberi
+  // ============================================================
+  const unisciLista     = document.getElementById("unisciLista");
+  const unisciRicerca   = document.getElementById("unisciRicerca");
+  const unisciRisultato = document.getElementById("unisciRisultato");
+  const unisciPieSvg    = document.getElementById("unisciPieSvg");
+  const unisciLeggenda  = document.getElementById("unisciLeggenda");
+  const unisciValori    = document.getElementById("unisciValori");
+  const unisciVuoto     = document.getElementById("unisciVuoto");
+
+  // Mappa: indice dispensa -> grammi impostati dall'utente
+  let unisciSelezionati = {}; // { idx: grammi }
+
+  unisciRicerca.addEventListener("input", () => popolaListaUnisci());
+
+  function renderUnisci() {
+    unisciSelezionati = {};
+    unisciRicerca.value = "";
+    popolaListaUnisci();
+    aggiornaUnisci();
+  }
+
+  function popolaListaUnisci() {
+    unisciLista.innerHTML = "";
+
+    if (!dispensa.length) {
+      unisciLista.innerHTML = `<p class="confronto-vuoto">Non ci sono alimenti in dispensa.</p>`;
+      return;
+    }
+
+    const query = unisciRicerca.value.trim().toLowerCase();
+    const voci = dispensa
+      .map((p, idx) => ({ idx, p }))
+      .sort((a, b) => a.p.nome.localeCompare(b.p.nome, "it"));
+
+    const vociFiltrate = query
+      ? voci.filter(({ p }) =>
+          p.nome.toLowerCase().includes(query) ||
+          (p.tag || "").toLowerCase().includes(query))
+      : voci;
+
+    if (!vociFiltrate.length) {
+      unisciLista.innerHTML = `<p class="confronto-vuoto">Nessun alimento corrisponde alla ricerca.</p>`;
+      return;
+    }
+
+    const pieno = Object.keys(unisciSelezionati).length >= 10;
+
+    vociFiltrate.forEach(({ idx, p }) => {
+      const isSelezionato = idx in unisciSelezionati;
+
+      const item = document.createElement("label");
+      item.className = "confronto-item" +
+        (isSelezionato ? " selezionato" : "") +
+        (!isSelezionato && pieno ? " disabilitato" : "");
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = isSelezionato;
+      cb.disabled = !isSelezionato && pieno;
+
+      const nomeSpan = document.createElement("span");
+      nomeSpan.className = "confronto-nome";
+      nomeSpan.textContent = p.nome;
+
+      const tagSpan = document.createElement("span");
+      tagSpan.className = "confronto-tag";
+      tagSpan.textContent = p.tag || "Senza tag";
+
+      cb.addEventListener("change", () => {
+        if (cb.checked) {
+          if (Object.keys(unisciSelezionati).length >= 10) {
+            cb.checked = false;
+            alert("Puoi selezionare al massimo 10 alimenti.");
+            return;
+          }
+          unisciSelezionati[idx] = 100; // grammi default
+        } else {
+          delete unisciSelezionati[idx];
+        }
+        popolaListaUnisci();
+        aggiornaUnisci();
+      });
+
+      item.appendChild(cb);
+      item.appendChild(nomeSpan);
+      item.appendChild(tagSpan);
+      unisciLista.appendChild(item);
+    });
+
+    // Sotto la lista: righe grammi per gli alimenti selezionati
+    // (ordine alfabetico, sempre visibili indipendentemente dalla ricerca)
+    const selezionatiOrdinati = Object.keys(unisciSelezionati)
+      .map(i => ({ idx: +i, p: dispensa[+i] }))
+      .sort((a, b) => a.p.nome.localeCompare(b.p.nome, "it"));
+
+    if (selezionatiOrdinati.length) {
+      const sep = document.createElement("div");
+      sep.style.cssText = "margin-top:14px;border-top:1px solid var(--border);padding-top:12px;";
+      const sepLabel = document.createElement("p");
+      sepLabel.style.cssText = "font-size:12px;color:var(--text-muted);margin-bottom:8px;";
+      sepLabel.textContent = "Grammi per alimento selezionato:";
+      sep.appendChild(sepLabel);
+
+      selezionatiOrdinati.forEach(({ idx, p }) => {
+        const row = document.createElement("div");
+        row.className = "unisci-grammi-row";
+
+        const nome = document.createElement("span");
+        nome.className = "unisci-grammi-nome";
+        nome.textContent = p.nome;
+
+        const inp = document.createElement("input");
+        inp.type = "number";
+        inp.min = "0";
+        inp.step = "1";
+        inp.value = unisciSelezionati[idx];
+        inp.className = "unisci-grammi-input";
+        inp.inputMode = "decimal";
+
+        inp.addEventListener("input", () => {
+          const v = parseFloat(inp.value);
+          unisciSelezionati[idx] = isNaN(v) || v < 0 ? 0 : v;
+          aggiornaUnisci();
+        });
+
+        const unit = document.createElement("span");
+        unit.className = "unisci-grammi-unit";
+        unit.textContent = "g";
+
+        row.appendChild(nome);
+        row.appendChild(inp);
+        row.appendChild(unit);
+        sep.appendChild(row);
+      });
+
+      unisciLista.appendChild(sep);
+    }
+  }
+
+  function aggiornaUnisci() {
+    const sel = Object.keys(unisciSelezionati);
+    if (!sel.length) {
+      unisciRisultato.classList.add("hidden");
+      unisciVuoto.classList.remove("hidden");
+      return;
+    }
+    unisciVuoto.classList.add("hidden");
+    unisciRisultato.classList.remove("hidden");
+
+    // Calcola totali pesati per i grammi impostati
+    let totCal = 0, totProt = 0, totCarb = 0, totGras = 0;
+    sel.forEach(i => {
+      const p = dispensa[+i];
+      const g = unisciSelezionati[+i] || 0;
+      const f = g / 100; // i valori nutrizionali sono per 100g
+      totCal  += (parseFloat(p.calorie)     || 0) * f;
+      totProt += (parseFloat(p.proteine)    || 0) * f;
+      totCarb += (parseFloat(p.carboidrati) || 0) * f;
+      totGras += (parseFloat(p.grassi)      || 0) * f;
+    });
+
+    // Grafico a torta (proporzionale su prot+carb+grassi in g)
+    const totMacro = totProt + totCarb + totGras;
+    const slices = [
+      { label: "Proteine",    valore: totProt, colore: PIE.proteine,    unita: "g"    },
+      { label: "Carboidrati", valore: totCarb, colore: PIE.carboidrati, unita: "g"    },
+      { label: "Grassi",      valore: totGras, colore: PIE.grassi,      unita: "g"    },
+    ].filter(s => s.valore > 0);
+
+    disegnaTortaUnisci(slices, totMacro);
+    disegnaLeggendaUnisci(slices, totMacro);
+    disegnaValoriUnisci(totCal, totProt, totCarb, totGras);
+  }
+
+  function disegnaTortaUnisci(slices, tot) {
+    const NS = "http://www.w3.org/2000/svg";
+    unisciPieSvg.innerHTML = "";
+    if (!slices.length || tot === 0) {
+      // Cerchio grigio se nessun macro
+      const circle = document.createElementNS(NS, "circle");
+      circle.setAttribute("cx", "100"); circle.setAttribute("cy", "100");
+      circle.setAttribute("r", "90"); circle.setAttribute("fill", "var(--border)");
+      unisciPieSvg.appendChild(circle);
+      return;
+    }
+    const R = 90, cx = 100, cy = 100;
+    let ang = 0;
+    slices.forEach(s => {
+      const delta = (s.valore / tot) * 2 * Math.PI;
+      const end   = ang + delta;
+      let d;
+      if (slices.length === 1) {
+        d = `M ${cx} ${cy-R} A ${R} ${R} 0 1 1 ${cx-0.001} ${cy-R} Z`;
+      } else {
+        const x1 = cx + R * Math.cos(ang), y1 = cy + R * Math.sin(ang);
+        const x2 = cx + R * Math.cos(end), y2 = cy + R * Math.sin(end);
+        d = `M ${cx} ${cy} L ${x1} ${y1} A ${R} ${R} 0 ${delta > Math.PI ? 1 : 0} 1 ${x2} ${y2} Z`;
+      }
+      const path = document.createElementNS(NS, "path");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", s.colore);
+      unisciPieSvg.appendChild(path);
+      ang = end;
+    });
+  }
+
+  function disegnaLeggendaUnisci(slices, tot) {
+    unisciLeggenda.innerHTML = "";
+    slices.forEach(s => {
+      const pct = tot > 0 ? Math.round((s.valore / tot) * 100) : 0;
+      const row = document.createElement("div");
+      row.className = "unisci-leggenda-item";
+      const dot = document.createElement("span");
+      dot.className = "unisci-leggenda-dot";
+      dot.style.background = s.colore;
+      const lbl = document.createElement("span");
+      lbl.className = "unisci-leggenda-label";
+      lbl.textContent = s.label;
+      const pctSpan = document.createElement("span");
+      pctSpan.className = "unisci-leggenda-pct";
+      pctSpan.textContent = pct + "%";
+      row.appendChild(dot); row.appendChild(lbl); row.appendChild(pctSpan);
+      unisciLeggenda.appendChild(row);
+    });
+  }
+
+  function disegnaValoriUnisci(cal, prot, carb, gras) {
+    unisciValori.innerHTML = "";
+    const dati = [
+      { label: "Calorie",     valore: cal,  unita: "kcal", colore: "#4E86C8" },
+      { label: "Proteine",    valore: prot, unita: "g",    colore: PIE.proteine    },
+      { label: "Carboidrati", valore: carb, unita: "g",    colore: PIE.carboidrati },
+      { label: "Grassi",      valore: gras, unita: "g",    colore: PIE.grassi      },
+    ];
+    dati.forEach(d => {
+      const card = document.createElement("div");
+      card.className = "unisci-val-card";
+      card.style.borderLeftColor = d.colore;
+      const lbl = document.createElement("div");
+      lbl.className = "unisci-val-label";
+      lbl.textContent = d.label;
+      const num = document.createElement("div");
+      const numSpan = document.createElement("span");
+      numSpan.className = "unisci-val-numero";
+      numSpan.textContent = Math.round(d.valore * 10) / 10;
+      const unitSpan = document.createElement("span");
+      unitSpan.className = "unisci-val-unita";
+      unitSpan.textContent = d.unita;
+      num.appendChild(numSpan); num.appendChild(unitSpan);
+      card.appendChild(lbl); card.appendChild(num);
+      unisciValori.appendChild(card);
+    });
   }
 
   // ============================================================
