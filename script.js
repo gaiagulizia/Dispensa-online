@@ -632,6 +632,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // ============================================================
   const confrontoLista   = document.getElementById("confrontoLista");
   const confrontoGrafici = document.getElementById("confrontoGrafici");
+  const confrontoRicerca = document.getElementById("confrontoRicerca");
 
   // Colori: stessi assegnati ai valori nutrizionali nel resto dell'app;
   // per le calorie si usa l'azzurro del tasto "Modifica".
@@ -649,24 +650,64 @@ window.addEventListener("DOMContentLoaded", () => {
     { chiave: "grassi",      etichetta: "Grassi",      unita: "g",    colore: COLORI_CONFRONTO.grassi      },
   ];
 
-  let confrontoSelezionati = []; // indici dell'array "dispensa" attualmente selezionati
+  // Ogni voce memorizza sia l'indice reale in "dispensa" sia il prodotto
+  // così la selezione resta stabile mentre la lista viene filtrata.
+  let confrontoSelezionati = []; // indici reali di "dispensa"
+
+  // Ascoltatore ricerca: filtra la lista al volo senza perdere la selezione
+  confrontoRicerca.addEventListener("input", () => popolaListaConfronto());
 
   function renderConfronto() {
     confrontoSelezionati = [];
+    confrontoRicerca.value = "";
+    popolaListaConfronto();
+    aggiornaGraficiConfronto();
+  }
+
+  // Popola (o ri-popola dopo una ricerca) la lista in ordine alfabetico,
+  // filtrando per il testo corrente nella barra di ricerca.
+  function popolaListaConfronto() {
     confrontoLista.innerHTML = "";
 
     if (!dispensa.length) {
       confrontoLista.innerHTML = `<p class="confronto-vuoto">Non ci sono alimenti in dispensa.</p>`;
-      confrontoGrafici.innerHTML = "";
       return;
     }
 
-    dispensa.forEach((p, idx) => {
+    const query = confrontoRicerca.value.trim().toLowerCase();
+
+    // Costruisce coppie {idx, prodotto} ordinate alfabeticamente per nome
+    const voci = dispensa
+      .map((p, idx) => ({ idx, p }))
+      .sort((a, b) => a.p.nome.localeCompare(b.p.nome, "it"));
+
+    // Filtra per query (cerca su nome e tag)
+    const vociFiltrate = query
+      ? voci.filter(({ p }) =>
+          p.nome.toLowerCase().includes(query) ||
+          (p.tag || "").toLowerCase().includes(query)
+        )
+      : voci;
+
+    if (!vociFiltrate.length) {
+      confrontoLista.innerHTML = `<p class="confronto-vuoto">Nessun alimento corrisponde alla ricerca.</p>`;
+      return;
+    }
+
+    const pieno = confrontoSelezionati.length >= 5;
+
+    vociFiltrate.forEach(({ idx, p }) => {
+      const isSelezionato = confrontoSelezionati.includes(idx);
+
       const item = document.createElement("label");
-      item.className = "confronto-item";
+      item.className = "confronto-item" +
+        (isSelezionato ? " selezionato" : "") +
+        (!isSelezionato && pieno ? " disabilitato" : "");
 
       const cb = document.createElement("input");
       cb.type = "checkbox";
+      cb.checked = isSelezionato;
+      cb.disabled = !isSelezionato && pieno;
 
       const nomeSpan = document.createElement("span");
       nomeSpan.className = "confronto-nome";
@@ -684,12 +725,11 @@ window.addEventListener("DOMContentLoaded", () => {
             return;
           }
           confrontoSelezionati.push(idx);
-          item.classList.add("selezionato");
         } else {
           confrontoSelezionati = confrontoSelezionati.filter(i => i !== idx);
-          item.classList.remove("selezionato");
         }
-        aggiornaStatoCheckboxConfronto();
+        // Ri-popola la lista per aggiornare stati disabilitato/selezionato
+        popolaListaConfronto();
         aggiornaGraficiConfronto();
       });
 
@@ -698,8 +738,6 @@ window.addEventListener("DOMContentLoaded", () => {
       item.appendChild(tagSpan);
       confrontoLista.appendChild(item);
     });
-
-    aggiornaGraficiConfronto();
   }
 
   function aggiornaStatoCheckboxConfronto() {
