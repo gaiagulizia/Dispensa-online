@@ -26,6 +26,7 @@
     <button class="tab-btn attivo" data-tab="aggiungi">Aggiungi</button>
     <button class="tab-btn" data-tab="dispensa">Dispensa</button>
     <button class="tab-btn" data-tab="confronta">Confronta</button>
+    <button class="tab-btn" data-tab="unisci">Unisci</button>
   </nav>
 
   <!-- TAB: AGGIUNGI PRODOTTO -->
@@ -120,6 +121,26 @@
       <input id="confrontoRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search" autocomplete="off">
       <div id="confrontoLista" class="confronto-lista"></div>
       <div id="confrontoGrafici" class="confronto-grafici"></div>
+    </section>
+  </main>
+
+  <!-- TAB: UNISCI ALIMENTI -->
+  <main id="tab-unisci" class="tab-content hidden">
+    <section class="card">
+      <h2>Unisci alimenti</h2>
+      <p class="confronta-hint">Seleziona fino a 10 alimenti e imposta i grammi di ciascuno. Il grafico mostra i valori nutrizionali totali della combinazione.</p>
+      <input id="unisciRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search" autocomplete="off">
+      <div id="unisciLista" class="confronto-lista"></div>
+
+      <!-- Sezione risultato -->
+      <div id="unisciRisultato" class="unisci-risultato hidden">
+        <div class="unisci-torta-wrap">
+          <svg id="unisciPieSvg" viewBox="0 0 200 200" class="unisci-pie-svg"></svg>
+          <div id="unisciLeggenda" class="unisci-leggenda"></div>
+        </div>
+        <div id="unisciValori" class="unisci-valori"></div>
+      </div>
+      <p id="unisciVuoto" class="confronto-vuoto hidden">Seleziona almeno un alimento per vedere il risultato.</p>
     </section>
   </main>
 
