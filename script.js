@@ -41,8 +41,8 @@ window.addEventListener("DOMContentLoaded", () => {
       const target = btn.dataset.tab;
       tabBtns.forEach(b => b.classList.toggle("attivo", b.dataset.tab === target));
       tabContents.forEach(c => c.classList.toggle("hidden", c.id !== "tab-" + target));
-      if (target === "confronta") renderConfronto();
-      if (target === "unisci")   renderUnisci();
+      if (target === "confronta") { popolaListaConfronto(); aggiornaGraficiConfronto(); }
+      if (target === "unisci")   { popolaListaUnisci(); aggiornaUnisci(); }
     });
   });
 
@@ -634,6 +634,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const confrontoLista   = document.getElementById("confrontoLista");
   const confrontoGrafici = document.getElementById("confrontoGrafici");
   const confrontoRicerca = document.getElementById("confrontoRicerca");
+  const confrontoCancella = document.getElementById("confrontoCancella");
 
   // Colori: stessi assegnati ai valori nutrizionali nel resto dell'app;
   // per le calorie si usa l'azzurro del tasto "Modifica".
@@ -651,19 +652,19 @@ window.addEventListener("DOMContentLoaded", () => {
     { chiave: "grassi",      etichetta: "Grassi",      unita: "g",    colore: COLORI_CONFRONTO.grassi      },
   ];
 
-  // Ogni voce memorizza sia l'indice reale in "dispensa" sia il prodotto
-  // così la selezione resta stabile mentre la lista viene filtrata.
+  // Stato persistente: resta invariato passando da una tab all'altra,
+  // si azzera solo premendo il tasto "cancella selezione".
   let confrontoSelezionati = []; // indici reali di "dispensa"
 
   // Ascoltatore ricerca: filtra la lista al volo senza perdere la selezione
   confrontoRicerca.addEventListener("input", () => popolaListaConfronto());
 
-  function renderConfronto() {
+  confrontoCancella.addEventListener("click", () => {
     confrontoSelezionati = [];
     confrontoRicerca.value = "";
     popolaListaConfronto();
     aggiornaGraficiConfronto();
-  }
+  });
 
   // Popola (o ri-popola dopo una ricerca) la lista in ordine alfabetico,
   // filtrando per il testo corrente nella barra di ricerca.
@@ -1073,140 +1074,147 @@ window.addEventListener("DOMContentLoaded", () => {
   // ============================================================
   const unisciLista     = document.getElementById("unisciLista");
   const unisciRicerca   = document.getElementById("unisciRicerca");
-  const unisciRisultato = document.getElementById("unisciRisultato");
-  const unisciPieSvg    = document.getElementById("unisciPieSvg");
-  const unisciLeggenda  = document.getElementById("unisciLeggenda");
-  const unisciValori    = document.getElementById("unisciValori");
-  const unisciVuoto     = document.getElementById("unisciVuoto");
+  const unisciRisultato  = document.getElementById("unisciRisultato");
+  const unisciPieSvg     = document.getElementById("unisciPieSvg");
+  const unisciLeggenda   = document.getElementById("unisciLeggenda");
+  const unisciValori     = document.getElementById("unisciValori");
+  const unisciVuoto      = document.getElementById("unisciVuoto");
+  const unisciCancella   = document.getElementById("unisciCancella");
+  const unisciGrammiBox  = document.getElementById("unisciGrammiBox");
+  const unisciGrammiLista = document.getElementById("unisciGrammiLista");
 
-  // Mappa: indice dispensa -> grammi impostati dall'utente
+  // Stato persistente: resta invariato passando da una tab all'altra,
+  // si azzera solo premendo il tasto "cancella selezione".
   let unisciSelezionati = {}; // { idx: grammi }
 
   unisciRicerca.addEventListener("input", () => popolaListaUnisci());
 
-  function renderUnisci() {
+  unisciCancella.addEventListener("click", () => {
     unisciSelezionati = {};
     unisciRicerca.value = "";
     popolaListaUnisci();
     aggiornaUnisci();
-  }
+  });
 
   function popolaListaUnisci() {
     unisciLista.innerHTML = "";
 
     if (!dispensa.length) {
       unisciLista.innerHTML = `<p class="confronto-vuoto">Non ci sono alimenti in dispensa.</p>`;
-      return;
+    } else {
+      const query = unisciRicerca.value.trim().toLowerCase();
+      const voci = dispensa
+        .map((p, idx) => ({ idx, p }))
+        .sort((a, b) => a.p.nome.localeCompare(b.p.nome, "it"));
+
+      const vociFiltrate = query
+        ? voci.filter(({ p }) =>
+            p.nome.toLowerCase().includes(query) ||
+            (p.tag || "").toLowerCase().includes(query))
+        : voci;
+
+      if (!vociFiltrate.length) {
+        unisciLista.innerHTML = `<p class="confronto-vuoto">Nessun alimento corrisponde alla ricerca.</p>`;
+      } else {
+        const pieno = Object.keys(unisciSelezionati).length >= 10;
+
+        vociFiltrate.forEach(({ idx, p }) => {
+          const isSelezionato = idx in unisciSelezionati;
+
+          const item = document.createElement("label");
+          item.className = "confronto-item" +
+            (isSelezionato ? " selezionato" : "") +
+            (!isSelezionato && pieno ? " disabilitato" : "");
+
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = isSelezionato;
+          cb.disabled = !isSelezionato && pieno;
+
+          const nomeSpan = document.createElement("span");
+          nomeSpan.className = "confronto-nome";
+          nomeSpan.textContent = p.nome;
+
+          const tagSpan = document.createElement("span");
+          tagSpan.className = "confronto-tag";
+          tagSpan.textContent = p.tag || "Senza tag";
+
+          cb.addEventListener("change", () => {
+            if (cb.checked) {
+              if (Object.keys(unisciSelezionati).length >= 10) {
+                cb.checked = false;
+                alert("Puoi selezionare al massimo 10 alimenti.");
+                return;
+              }
+              unisciSelezionati[idx] = 100; // grammi default
+            } else {
+              delete unisciSelezionati[idx];
+            }
+            popolaListaUnisci();
+            aggiornaUnisci();
+          });
+
+          item.appendChild(cb);
+          item.appendChild(nomeSpan);
+          item.appendChild(tagSpan);
+          unisciLista.appendChild(item);
+        });
+      }
     }
 
-    const query = unisciRicerca.value.trim().toLowerCase();
-    const voci = dispensa
-      .map((p, idx) => ({ idx, p }))
+    // Lista grammi: contenitore separato, sempre aggiornato
+    // indipendentemente dall'esito della ricerca sopra.
+    popolaGrammiUnisci();
+  }
+
+  // Disegna la lista "grammi per alimento selezionato" in un blocco
+  // del tutto separato dalla lista di selezione, cosi' non serve
+  // scorrere fino in fondo per modificare le quantita'.
+  function popolaGrammiUnisci() {
+    unisciGrammiLista.innerHTML = "";
+
+    const selezionatiOrdinati = Object.keys(unisciSelezionati)
+      .map(i => ({ idx: +i, p: dispensa[+i] }))
+      .filter(({ p }) => !!p)
       .sort((a, b) => a.p.nome.localeCompare(b.p.nome, "it"));
 
-    const vociFiltrate = query
-      ? voci.filter(({ p }) =>
-          p.nome.toLowerCase().includes(query) ||
-          (p.tag || "").toLowerCase().includes(query))
-      : voci;
-
-    if (!vociFiltrate.length) {
-      unisciLista.innerHTML = `<p class="confronto-vuoto">Nessun alimento corrisponde alla ricerca.</p>`;
+    if (!selezionatiOrdinati.length) {
+      unisciGrammiBox.classList.add("hidden");
       return;
     }
+    unisciGrammiBox.classList.remove("hidden");
 
-    const pieno = Object.keys(unisciSelezionati).length >= 10;
+    selezionatiOrdinati.forEach(({ idx, p }) => {
+      const row = document.createElement("div");
+      row.className = "unisci-grammi-row";
 
-    vociFiltrate.forEach(({ idx, p }) => {
-      const isSelezionato = idx in unisciSelezionati;
+      const nome = document.createElement("span");
+      nome.className = "unisci-grammi-nome";
+      nome.textContent = p.nome;
 
-      const item = document.createElement("label");
-      item.className = "confronto-item" +
-        (isSelezionato ? " selezionato" : "") +
-        (!isSelezionato && pieno ? " disabilitato" : "");
+      const inp = document.createElement("input");
+      inp.type = "number";
+      inp.min = "0";
+      inp.step = "1";
+      inp.value = unisciSelezionati[idx];
+      inp.className = "unisci-grammi-input";
+      inp.inputMode = "decimal";
 
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = isSelezionato;
-      cb.disabled = !isSelezionato && pieno;
-
-      const nomeSpan = document.createElement("span");
-      nomeSpan.className = "confronto-nome";
-      nomeSpan.textContent = p.nome;
-
-      const tagSpan = document.createElement("span");
-      tagSpan.className = "confronto-tag";
-      tagSpan.textContent = p.tag || "Senza tag";
-
-      cb.addEventListener("change", () => {
-        if (cb.checked) {
-          if (Object.keys(unisciSelezionati).length >= 10) {
-            cb.checked = false;
-            alert("Puoi selezionare al massimo 10 alimenti.");
-            return;
-          }
-          unisciSelezionati[idx] = 100; // grammi default
-        } else {
-          delete unisciSelezionati[idx];
-        }
-        popolaListaUnisci();
+      inp.addEventListener("input", () => {
+        const v = parseFloat(inp.value);
+        unisciSelezionati[idx] = isNaN(v) || v < 0 ? 0 : v;
         aggiornaUnisci();
       });
 
-      item.appendChild(cb);
-      item.appendChild(nomeSpan);
-      item.appendChild(tagSpan);
-      unisciLista.appendChild(item);
+      const unit = document.createElement("span");
+      unit.className = "unisci-grammi-unit";
+      unit.textContent = "g";
+
+      row.appendChild(nome);
+      row.appendChild(inp);
+      row.appendChild(unit);
+      unisciGrammiLista.appendChild(row);
     });
-
-    // Sotto la lista: righe grammi per gli alimenti selezionati
-    // (ordine alfabetico, sempre visibili indipendentemente dalla ricerca)
-    const selezionatiOrdinati = Object.keys(unisciSelezionati)
-      .map(i => ({ idx: +i, p: dispensa[+i] }))
-      .sort((a, b) => a.p.nome.localeCompare(b.p.nome, "it"));
-
-    if (selezionatiOrdinati.length) {
-      const sep = document.createElement("div");
-      sep.style.cssText = "margin-top:14px;border-top:1px solid var(--border);padding-top:12px;";
-      const sepLabel = document.createElement("p");
-      sepLabel.style.cssText = "font-size:12px;color:var(--text-muted);margin-bottom:8px;";
-      sepLabel.textContent = "Grammi per alimento selezionato:";
-      sep.appendChild(sepLabel);
-
-      selezionatiOrdinati.forEach(({ idx, p }) => {
-        const row = document.createElement("div");
-        row.className = "unisci-grammi-row";
-
-        const nome = document.createElement("span");
-        nome.className = "unisci-grammi-nome";
-        nome.textContent = p.nome;
-
-        const inp = document.createElement("input");
-        inp.type = "number";
-        inp.min = "0";
-        inp.step = "1";
-        inp.value = unisciSelezionati[idx];
-        inp.className = "unisci-grammi-input";
-        inp.inputMode = "decimal";
-
-        inp.addEventListener("input", () => {
-          const v = parseFloat(inp.value);
-          unisciSelezionati[idx] = isNaN(v) || v < 0 ? 0 : v;
-          aggiornaUnisci();
-        });
-
-        const unit = document.createElement("span");
-        unit.className = "unisci-grammi-unit";
-        unit.textContent = "g";
-
-        row.appendChild(nome);
-        row.appendChild(inp);
-        row.appendChild(unit);
-        sep.appendChild(row);
-      });
-
-      unisciLista.appendChild(sep);
-    }
   }
 
   function aggiornaUnisci() {
