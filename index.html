@@ -118,7 +118,10 @@
     <section class="card">
       <h2>Confronta alimenti</h2>
       <p class="confronta-hint">Seleziona fino a 5 alimenti dalla dispensa per confrontare i loro valori nutrizionali (per 100g).</p>
-      <input id="confrontoRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search" autocomplete="off">
+      <div class="ricerca-row">
+        <input id="confrontoRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search" autocomplete="off" class="flex1">
+        <button id="confrontoCancella" class="btn-cancella-sel" title="Cancella selezione">&#10005;</button>
+      </div>
       <div id="confrontoLista" class="confronto-lista"></div>
       <div id="confrontoGrafici" class="confronto-grafici"></div>
     </section>
@@ -129,8 +132,17 @@
     <section class="card">
       <h2>Unisci alimenti</h2>
       <p class="confronta-hint">Seleziona fino a 10 alimenti e imposta i grammi di ciascuno. Il grafico mostra i valori nutrizionali totali della combinazione.</p>
-      <input id="unisciRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search" autocomplete="off">
+      <div class="ricerca-row">
+        <input id="unisciRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search" autocomplete="off" class="flex1">
+        <button id="unisciCancella" class="btn-cancella-sel" title="Cancella selezione">&#10005;</button>
+      </div>
       <div id="unisciLista" class="confronto-lista"></div>
+
+      <!-- Grammi degli alimenti selezionati: sezione separata, sempre visibile -->
+      <div id="unisciGrammiBox" class="unisci-grammi-box hidden">
+        <p class="unisci-grammi-titolo">Grammi per alimento selezionato:</p>
+        <div id="unisciGrammiLista"></div>
+      </div>
 
       <!-- Sezione risultato -->
       <div id="unisciRisultato" class="unisci-risultato hidden">
