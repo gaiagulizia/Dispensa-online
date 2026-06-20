@@ -670,6 +670,51 @@ body.dark .scadenza-ok     { border-left-color: #a1da4c; }
   text-align: center;
   padding: 18px 0;
 }
+/* ===== RICERCA CON TASTO CANCELLA (confronta/unisci) ===== */
+.ricerca-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ricerca-row input { margin: 5px 0; }
+
+.btn-cancella-sel {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-soft);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s;
+}
+.btn-cancella-sel:hover, .btn-cancella-sel:active {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+/* ===== BOX GRAMMI SEPARATO (sezione Unisci) ===== */
+.unisci-grammi-box {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.unisci-grammi-box.hidden { display: none; }
+
+.unisci-grammi-titolo {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
 /* ===== TAB UNISCI ===== */
 .unisci-risultato {
   margin-top: 20px;
