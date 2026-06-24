@@ -1,203 +1,178 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="theme-color" content="#2d6a4f">
-  <title>Dispensa Digitale</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produttività</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=DynaPuff:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- INTESTAZIONE -->
-  <header class="app-header">
-    <h1>Dispensa Digitale</h1>
-  </header>
+<div class="app-container">
 
-    
-  <!-- NAVIGAZIONE A TAB -->
-  <nav class="tab-bar">
-    <button class="tab-btn attivo" data-tab="aggiungi">Aggiungi</button>
-    <button class="tab-btn" data-tab="dispensa">Dispensa</button>
-    <button class="tab-btn" data-tab="confronta">Confronta</button>
-    <button class="tab-btn" data-tab="unisci">Unisci</button>
-  </nav>
-
-  <!-- TAB: AGGIUNGI PRODOTTO -->
-  <main id="tab-aggiungi" class="tab-content">
-    <section class="card">
-      <h2>Aggiungi prodotto</h2>
-
-      <div class="autocomplete-wrapper">
-        <input id="nome" placeholder="Nome prodotto" autocomplete="off" inputmode="text">
-        <ul id="suggerimenti" class="suggerimenti-list hidden"></ul>
-      </div>
-
-      <div class="row-duo">
-        <input id="scadenza" type="date" class="flex1">
-        <div class="quantita-group">
-          <input id="quantita" type="number" min="1" placeholder="Qta" inputmode="numeric" class="input-qta">
-          <select id="unitaSelect" class="select-unita">
-            <option value="pz">pz</option>
-            <option value="g">g</option>
-            <option value="ml">ml</option>
-            <option value="kg">kg</option>
-            <option value="L">L</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row-duo">
-        <input id="tagInput" placeholder="Nuovo tag" class="flex1" inputmode="text">
-        <select id="tagSelect" class="flex1">
-          <option value="">Tag esistenti</option>
-        </select>
-      </div>
-
-      <div class="nutrienti-grid">
-        <input id="calorie"      placeholder="Calorie (per 100g)"      inputmode="decimal">
-        <input id="proteine"     placeholder="Proteine (per 100g)"     inputmode="decimal">
-        <input id="carboidrati"  placeholder="Carboidrati (per 100g)"  inputmode="decimal">
-        <input id="grassi"       placeholder="Grassi (per 100g)"       inputmode="decimal">
-      </div>
-
-      <button id="addBtn" class="btn-primario">Aggiungi</button>
-
-      <div class="undo-redo-bar">
-        <button id="undoBtn" disabled>&#8617; Annulla</button>
-        <button id="redoBtn" disabled>&#8618; Ripristina</button>
-      </div>
-    </section>
-  </main>
-
-  <!-- TAB: DISPENSA -->
-  <main id="tab-dispensa" class="tab-content hidden">
-    <section class="card">
-
-      <!-- Filtri scadenza -->
-      <div class="filtri-scadenza">
-        <button class="filtro-btn attivo" data-filtro="TUTTI">Tutti</button>
-        <button class="filtro-btn" data-filtro="7">Entro 7 giorni</button>
-        <button class="filtro-btn" data-filtro="30">Entro 1 mese</button>
-      </div>
-
-      <!-- Ordinamento -->
-      <div class="ordina-row">
-        <label for="ordinaSelect">Ordina:</label>
-        <select id="ordinaSelect">
-          <option value="data">Data aggiunta</option>
-          <option value="scadenza_asc">Scadenza (prima)</option>
-          <option value="alfabetico">Alfabetico</option>
-          <option value="calorie_desc">Calorie (più)</option>
-          <option value="calorie_asc">Calorie (meno)</option>
-          <option value="proteine_desc">Proteine (più)</option>
-          <option value="proteine_asc">Proteine (meno)</option>
-          <option value="carboidrati_desc">Carboidrati (più)</option>
-          <option value="carboidrati_asc">Carboidrati (meno)</option>
-          <option value="grassi_desc">Grassi (più)</option>
-          <option value="grassi_asc">Grassi (meno)</option>
-        </select>
-      </div>
-
-      <!-- Tag bar -->
-      <div id="tagBar"></div>
-
-      <!-- Lista prodotti -->
-      <div id="dispensa"></div>
-    </section>
-  </main>
-
-  <!-- TAB: CONFRONTA ALIMENTI -->
-  <main id="tab-confronta" class="tab-content hidden">
-    <section class="card">
-      <h2>Confronta alimenti</h2>
-      <p class="confronta-hint">Seleziona fino a 5 alimenti dalla dispensa per confrontare i loro valori nutrizionali (per 100g).</p>
-      <div class="ricerca-row">
-        <input id="confrontoRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search" autocomplete="off" class="flex1">
-        <button id="confrontoCancella" class="btn-cancella-sel" title="Cancella selezione">&#10005;</button>
-      </div>
-      <div id="confrontoLista" class="confronto-lista"></div>
-      <div id="confrontoGrafici" class="confronto-grafici"></div>
-    </section>
-  </main>
-
-  <!-- TAB: UNISCI ALIMENTI -->
-  <main id="tab-unisci" class="tab-content hidden">
-    <section class="card">
-      <h2>Unisci alimenti</h2>
-      <p class="confronta-hint">Seleziona fino a 10 alimenti e imposta i grammi di ciascuno. Il grafico mostra i valori nutrizionali totali della combinazione.</p>
-      <div class="ricerca-row">
-        <input id="unisciRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search" autocomplete="off" class="flex1">
-        <button id="unisciCancella" class="btn-cancella-sel" title="Cancella selezione">&#10005;</button>
-      </div>
-      <div id="unisciLista" class="confronto-lista"></div>
-
-      <!-- Grammi degli alimenti selezionati: sezione separata, sempre visibile -->
-      <div id="unisciGrammiBox" class="unisci-grammi-box hidden">
-        <p class="unisci-grammi-titolo">Grammi per alimento selezionato:</p>
-        <div id="unisciGrammiLista"></div>
-      </div>
-
-      <!-- Sezione risultato -->
-      <div id="unisciRisultato" class="unisci-risultato hidden">
-        <div class="unisci-torta-wrap">
-          <svg id="unisciPieSvg" viewBox="0 0 200 200" class="unisci-pie-svg"></svg>
-          <div id="unisciLeggenda" class="unisci-leggenda"></div>
-        </div>
-        <div id="unisciValori" class="unisci-valori"></div>
-      </div>
-      <p id="unisciVuoto" class="confronto-vuoto hidden">Seleziona almeno un alimento per vedere il risultato.</p>
-    </section>
-  </main>
-
-  <!-- MODALE: GESTIONE TAG -->
-  <div id="modaleTag" class="modale hidden" role="dialog" aria-modal="true">
-    <div class="modale-box">
-      <h3>Gestisci tag</h3>
-      <ul id="listaTagGestione"></ul>
-      <button class="btn-secondario" id="chiudiModaleTag">Chiudi</button>
+    <div class="header-row">
+        <h1>Produttività</h1>
+        <button class="stats-open-btn" onclick="openStats()">Statistiche</button>
     </div>
-  </div>
 
-  <!-- MODALE: MODIFICA PRODOTTO -->
-  <div id="modaleModifica" class="modale hidden" role="dialog" aria-modal="true">
-    <div class="modale-box">
-      <h3>Modifica prodotto</h3>
-      <input id="editNome"        placeholder="Nome"               inputmode="text">
-      <div class="row-duo">
-        <input id="editScadenza"  type="date" class="flex1">
-        <div class="quantita-group">
-          <input id="editQuantita" type="number" min="1" placeholder="Qta" inputmode="numeric" class="input-qta">
-          <select id="editUnita" class="select-unita">
-            <option value="pz">pz</option>
-            <option value="g">g</option>
-            <option value="ml">ml</option>
-            <option value="kg">kg</option>
-            <option value="L">L</option>
-          </select>
+    <div class="main-content">
+
+        <!-- ===== SINISTRA ===== -->
+        <div class="left-panel">
+
+            <div class="top-panel">
+                <div class="left-column">
+                    <div class="time-row">
+
+                        <div class="stopwatch-box">
+                            <div class="stopwatch-title">Cronometro</div>
+                            <div class="stopwatch-time" id="stopwatch">00:00</div>
+                            <div class="stopwatch-controls">
+                                <button class="small-btn" onclick="toggleStopwatch()">Start / Stop</button>
+                                <button class="small-btn" onclick="resetStopwatch()">Reset</button>
+                            </div>
+                        </div>
+
+                        <div class="timer-box">
+                            <div class="timer-title">Timer</div>
+                            <div class="timer-display" id="timerDisplay">25:00</div>
+                            <div class="timer-settings">
+                                <div class="step-control">
+                                    <button class="arrow-btn" onclick="changeStudy(-5)">←</button>
+                                    <input type="number" id="studyMinutes" class="time-input" value="25" min="1">
+                                    <button class="arrow-btn" onclick="changeStudy(5)">→</button>
+                                </div>
+                            </div>
+                            <div class="timer-controls">
+                                <button class="small-btn" onclick="startTimer()">Start</button>
+                                <button class="small-btn" onclick="pauseTimer()">Stop</button>
+                                <button class="small-btn" onclick="resetTimer()">Reset</button>
+                            </div>
+                        </div>
+
+                    </div><!-- fine time-row -->
+
+                    <div class="total-time-wrapper">
+                        <button class="arrow-btn" onclick="changeTotalTime(-300)">←</button>
+                        <div class="total-time">Tempo Totale: <span id="totalTime">00:00</span></div>
+                        <button class="arrow-btn" onclick="changeTotalTime(300)">→</button>
+                        <button class="reset-total-btn" onclick="resetTotalTime()">↺</button>
+                    </div>
+                </div><!-- fine left-column -->
+
+                <div class="right-column">
+                    <div class="keypad">
+                        <button class="key" onclick="pressNumber(1)">1</button>
+                        <button class="key" onclick="pressNumber(2)">2</button>
+                        <button class="key" onclick="pressNumber(3)">3</button>
+                        <button class="key" onclick="pressNumber(4)">4</button>
+                        <button class="key" onclick="pressNumber(5)">5</button>
+                        <button class="key" onclick="pressNumber(6)">6</button>
+                        <button class="key" onclick="pressNumber(7)">7</button>
+                        <button class="key" onclick="pressNumber(8)">8</button>
+                        <button class="key" onclick="pressNumber(9)">9</button>
+                        <button class="key clear-key" onclick="clearInput()">C</button>
+                        <button class="key" onclick="pressNumber(0)">0</button>
+                        <button class="key" onclick="applyManualTotal()">✓</button>
+                    </div>
+                    <div class="counter">Pagine: <span id="counter">0</span></div>
+                </div><!-- fine right-column -->
+            </div><!-- fine top-panel -->
+
+            <!-- Scatola cioccolatini: gif assoluta a sx, box centrato su X -->
+            <div class="box-wrapper">
+                <img class="study-gif"
+                     src="https://64.media.tumblr.com/a86753dba21858536a4d4507fd96df87/9c6995b07d21774e-b4/s500x750/92f32f6605203b5f21c18e0d5faf1608409a4fc2.gif"
+                     alt="studio">
+                <div class="current-box-area">
+                    <div class="box" id="mainBox"></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="add-btn"    onclick="addChocolate()">➕ Aggiungi</button>
+                <button class="remove-btn" onclick="removeChocolate()">➖ Rimuovi</button>
+            </div>
+
+        </div><!-- fine left-panel -->
+
+        <!-- ===== DESTRA ===== -->
+        <div class="right-panel">
+
+            <div class="stats-box">
+                <div class="stats-title">Velocità media</div>
+                <div class="stats-value" id="speedValue">0 pag/h</div>
+            </div>
+
+            <div class="completed-section">
+                <div class="completed-title">Scatole completate</div>
+                <div class="completed-boxes" id="completedBoxes"></div>
+            </div>
+
+        </div><!-- fine right-panel -->
+
+    </div><!-- fine main-content -->
+
+</div><!-- fine app-container -->
+
+<!-- ===== OVERLAY STATISTICHE ===== -->
+<div class="stat-overlay stat-overlay--hidden" id="statsOverlay">
+    <div class="stat-page">
+
+        <div class="stat-topbar">
+            <h2 class="stat-heading">Statistiche</h2>
+            <button class="stat-close-btn" onclick="closeStats()">✕</button>
         </div>
-      </div>
-      <select id="editTag"></select>
-      <input id="editCalorie"     placeholder="Calorie (per 100g)"     inputmode="decimal">
-      <input id="editProteine"    placeholder="Proteine (per 100g)"    inputmode="decimal">
-      <input id="editCarboidrati" placeholder="Carboidrati (per 100g)" inputmode="decimal">
-      <input id="editGrassi"      placeholder="Grassi (per 100g)"      inputmode="decimal">
-      <div class="modale-azioni">
-        <button id="salvaModifica" class="btn-primario">Salva</button>
-        <button id="chiudiModifica" class="btn-secondario">Annulla</button>
-      </div>
-    </div>
-  </div>
 
-<button id="temaBtn" class="tema-btn" aria-label="Cambia tema">☾</button>
-  
-    
-  <script src="script.js"></script>
+        <div class="stat-controls">
+            <div class="period-tabs">
+                <button class="period-tab period-tab--active" data-mode="week"  onclick="setStatsMode('week')">Settimana</button>
+                <button class="period-tab"                    data-mode="month" onclick="setStatsMode('month')">Mese</button>
+                <button class="period-tab"                    data-mode="year"  onclick="setStatsMode('year')">Anno</button>
+            </div>
+            <div class="period-nav">
+                <button class="nav-arrow" onclick="changeStatsPeriod(-1)">←</button>
+                <span class="period-label" id="periodLabel">—</span>
+                <button class="nav-arrow" onclick="changeStatsPeriod(1)">→</button>
+            </div>
+        </div>
+
+        <div class="stat-totals">
+            <div class="stat-total-card">
+                <div class="stat-total-label">📖 Pagine studiate</div>
+                <div class="stat-total-value" id="statsTotalPages">0</div>
+            </div>
+            <div class="stat-total-card">
+                <div class="stat-total-label">⏱ Ore di studio</div>
+                <div class="stat-total-value" id="statsTotalHours">0h 00m</div>
+            </div>
+        </div>
+
+        <div class="charts-row">
+            <div class="chart-card">
+                <div class="chart-card-title">Pagine studiate</div>
+                <div class="chart-wrap"><canvas id="pagesChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-card-title">Tempo di studio (ore)</div>
+                <div class="chart-wrap"><canvas id="timeChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="edit-section">
+            <button class="edit-toggle-btn" onclick="toggleEdit()">✏️ Modifica registrazioni</button>
+            <div id="editArea" class="edit-area edit-area--hidden"></div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="script.js"></script>
+
 </body>
 </html>
