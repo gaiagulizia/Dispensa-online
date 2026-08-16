@@ -1486,12 +1486,24 @@ window.addEventListener("DOMContentLoaded", () => {
     return d.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "long", year: "numeric" });
   }
 
+  // Formatta una Date in stringa "YYYY-MM-DD" usando i valori LOCALI
+  // (a differenza di toISOString(), che converte in UTC e quindi può
+  // restituire il giorno precedente per i fusi orari avanti rispetto a UTC,
+  // causando lo sfasamento di un giorno tra le date mostrate in etichetta
+  // e i dati effettivamente visualizzati nel grafico).
+  function toDataLocale(d) {
+    const anno   = d.getFullYear();
+    const mese   = String(d.getMonth() + 1).padStart(2, "0");
+    const giorno = String(d.getDate()).padStart(2, "0");
+    return `${anno}-${mese}-${giorno}`;
+  }
+
   // Genera lista di date YYYY-MM-DD nell'intervallo
   function dateNelRange(inizio, fine) {
     const lista = [];
     const cur = new Date(inizio);
     while (cur <= fine) {
-      lista.push(cur.toISOString().slice(0, 10));
+      lista.push(toDataLocale(cur));
       cur.setDate(cur.getDate() + 1);
     }
     return lista;
@@ -1577,8 +1589,16 @@ window.addEventListener("DOMContentLoaded", () => {
     const maxVal = Math.max(...valori, ideale || 0, 1);
     const maxEff = maxVal * 1.15;
 
-    // Linee di sfondo (griglia orizzontale)
-    const stepY = Math.ceil(maxEff / 4);
+    // Linee di sfondo (griglia orizzontale).
+    // Le linee vanno posizionate a frazioni ESATTE (0%, 25%, 50%, 75%, 100%)
+    // dell'area del grafico, cosi da restare sempre entro i bordi e da
+    // ricalibrarsi correttamente quando maxEff cambia (es. inserendo un
+    // valore ideale che alza il massimo). Con Math.ceil(maxEff / 4) lo
+    // step veniva arrotondato per eccesso: le linee per i=3 e i=4 (le due
+    // più in alto) finivano quindi sopra al valore massimo effettivo e
+    // uscivano dall'area visibile del grafico invece di adattarsi alla
+    // nuova scala.
+    const stepY = maxEff / 4;
     for (let i = 0; i <= 4; i++) {
       const v = i * stepY;
       const y = padTop + areaH - (v / maxEff) * areaH;
@@ -1591,7 +1611,8 @@ window.addEventListener("DOMContentLoaded", () => {
       line.setAttribute("stroke-width", "0.5");
       svg.appendChild(line);
 
-      // Label asse Y
+      // Label asse Y (il valore va arrotondato solo per la visualizzazione,
+      // la posizione della linea resta calcolata sul valore esatto)
       const lbl = document.createElementNS(NS, "text");
       lbl.setAttribute("x", (padLeft - 3).toString());
       lbl.setAttribute("y", (y + 3).toFixed(1));
@@ -1599,7 +1620,8 @@ window.addEventListener("DOMContentLoaded", () => {
       lbl.setAttribute("font-size", "8");
       lbl.setAttribute("fill", "var(--text-muted)");
       lbl.setAttribute("font-family", "Arial, sans-serif");
-      lbl.textContent = v > 999 ? Math.round(v / 100) / 10 + "k" : v;
+      const vArrotondato = Math.round(v);
+      lbl.textContent = vArrotondato > 999 ? Math.round(vArrotondato / 100) / 10 + "k" : vArrotondato;
       svg.appendChild(lbl);
     }
 
