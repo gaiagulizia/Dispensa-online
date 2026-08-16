@@ -30,21 +30,24 @@ window.addEventListener("DOMContentLoaded", () => {
     applicaTema(!document.body.classList.contains("dark"));
   });
 
-  // ============================================================
-  // NAVIGAZIONE A TAB
-  // ============================================================
   const tabBtns    = document.querySelectorAll(".tab-btn");
+  const bottomBtns  = document.querySelectorAll(".bottom-btn");
   const tabContents = document.querySelectorAll(".tab-content");
 
+  function attivaTab(target) {
+    tabBtns.forEach(b => b.classList.toggle("attivo", b.dataset.tab === target));
+    bottomBtns.forEach(b => b.classList.toggle("attivo", b.dataset.tab === target));
+    tabContents.forEach(c => c.classList.toggle("hidden", c.id !== "tab-" + target));
+    if (target === "confronta") { popolaListaConfronto(); aggiornaGraficiConfronto(); }
+    if (target === "pasti")    { popolaListaPasti(); aggiornaPasti(); }
+    if (target === "profilo")  { profiloOffset = 0; renderProfilo(); }
+  }
+
   tabBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-      const target = btn.dataset.tab;
-      tabBtns.forEach(b => b.classList.toggle("attivo", b.dataset.tab === target));
-      tabContents.forEach(c => c.classList.toggle("hidden", c.id !== "tab-" + target));
-      if (target === "confronta") { popolaListaConfronto(); aggiornaGraficiConfronto(); }
-      if (target === "pasti")    { popolaListaPasti(); aggiornaPasti(); }
-      if (target === "profilo")  { renderProfilo(); }
-    });
+    btn.addEventListener("click", () => attivaTab(btn.dataset.tab));
+  });
+  bottomBtns.forEach(btn => {
+    btn.addEventListener("click", () => attivaTab(btn.dataset.tab));
   });
 
   // ============================================================
@@ -1560,7 +1563,8 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function disegnaGraficoProfilo(svg, valori, date, valoriGiornalieri, colore, ideale, unita) {
-    svg.innerHTML = "";
+    // Rimuovi tutti i figli SVG in modo affidabile (innerHTML può dare problemi su alcuni WebView)
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
     const NS = "http://www.w3.org/2000/svg";
 
     const W = 320, H = 160;

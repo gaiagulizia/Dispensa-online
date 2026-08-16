@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -13,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <!-- INTESTAZIONE -->
@@ -20,14 +22,18 @@
     <h1>Dispensa Digitale</h1>
   </header>
 
-    
+
   <!-- NAVIGAZIONE A TAB -->
   <nav class="tab-bar">
     <button class="tab-btn attivo" data-tab="aggiungi">Aggiungi</button>
     <button class="tab-btn" data-tab="dispensa">Dispensa</button>
     <button class="tab-btn" data-tab="confronta">Confronta</button>
-    <button class="tab-btn" data-tab="pasti">Pasti</button>
-    <button class="tab-btn" data-tab="profilo">Profilo</button>
+  </nav>
+
+  <!-- NAVIGAZIONE IN BASSO -->
+  <nav class="bottom-bar">
+    <button class="bottom-btn" data-tab="pasti">🍽️ Pasti</button>
+    <button class="bottom-btn" data-tab="profilo">📊 Profilo</button>
   </nav>
 
   <!-- TAB: AGGIUNGI PRODOTTO -->
@@ -64,10 +70,10 @@
       </div>
 
       <div class="nutrienti-grid">
-        <input id="calorie"      placeholder="Calorie (per 100g)"      inputmode="decimal">
-        <input id="proteine"     placeholder="Proteine (per 100g)"     inputmode="decimal">
-        <input id="carboidrati"  placeholder="Carboidrati (per 100g)"  inputmode="decimal">
-        <input id="grassi"       placeholder="Grassi (per 100g)"       inputmode="decimal">
+        <input id="calorie" placeholder="Calorie (per 100g)" inputmode="decimal">
+        <input id="proteine" placeholder="Proteine (per 100g)" inputmode="decimal">
+        <input id="carboidrati" placeholder="Carboidrati (per 100g)" inputmode="decimal">
+        <input id="grassi" placeholder="Grassi (per 100g)" inputmode="decimal">
       </div>
 
       <button id="addBtn" class="btn-primario">Aggiungi</button>
@@ -120,9 +126,11 @@
   <main id="tab-confronta" class="tab-content hidden">
     <section class="card">
       <h2>Confronta alimenti</h2>
-      <p class="confronta-hint">Seleziona fino a 5 alimenti dalla dispensa per confrontare i loro valori nutrizionali (per 100g).</p>
+      <p class="confronta-hint">Seleziona fino a 5 alimenti dalla dispensa per confrontare i loro valori nutrizionali
+        (per 100g).</p>
       <div class="ricerca-row">
-        <input id="confrontoRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search" autocomplete="off" class="flex1">
+        <input id="confrontoRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search"
+          autocomplete="off" class="flex1">
         <button id="confrontoCancella" class="btn-cancella-sel" title="Cancella selezione">&#10005;</button>
       </div>
       <div id="confrontoLista" class="confronto-lista"></div>
@@ -134,9 +142,11 @@
   <main id="tab-pasti" class="tab-content hidden">
     <section class="card">
       <h2>Pasti</h2>
-      <p class="confronta-hint">Seleziona fino a 10 alimenti e imposta i grammi di ciascuno. Il grafico mostra i valori nutrizionali totali della combinazione.</p>
+      <p class="confronta-hint">Seleziona fino a 10 alimenti e imposta i grammi di ciascuno. Il grafico mostra i valori
+        nutrizionali totali della combinazione.</p>
       <div class="ricerca-row">
-        <input id="pastiRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search" autocomplete="off" class="flex1">
+        <input id="pastiRicerca" type="search" placeholder="Cerca per nome o tag..." inputmode="search"
+          autocomplete="off" class="flex1">
         <button id="pastiCancella" class="btn-cancella-sel" title="Cancella selezione">&#10005;</button>
       </div>
       <div id="pastiLista" class="confronto-lista"></div>
@@ -191,7 +201,8 @@
             <span class="profilo-grafico-titolo" style="color:#4E86C8">Calorie</span>
             <div class="profilo-ideale-row">
               <span class="profilo-ideale-lbl">Ideale:</span>
-              <input id="idealeCalorie" type="number" min="0" placeholder="kcal/g" class="profilo-ideale-input" inputmode="decimal">
+              <input id="idealeCalorie" type="number" min="0" placeholder="kcal/g" class="profilo-ideale-input"
+                inputmode="decimal">
               <span class="profilo-ideale-unit">kcal</span>
             </div>
           </div>
@@ -205,7 +216,8 @@
             <span class="profilo-grafico-titolo" style="color:#8e94f2">Proteine</span>
             <div class="profilo-ideale-row">
               <span class="profilo-ideale-lbl">Ideale:</span>
-              <input id="idealeProteine" type="number" min="0" placeholder="g/die" class="profilo-ideale-input" inputmode="decimal">
+              <input id="idealeProteine" type="number" min="0" placeholder="g/die" class="profilo-ideale-input"
+                inputmode="decimal">
               <span class="profilo-ideale-unit">g</span>
             </div>
           </div>
@@ -219,11 +231,13 @@
             <span class="profilo-grafico-titolo" style="color:#ee8434">Carboidrati</span>
             <div class="profilo-ideale-row">
               <span class="profilo-ideale-lbl">Ideale:</span>
-              <input id="idealeCarboidrati" type="number" min="0" placeholder="g/die" class="profilo-ideale-input" inputmode="decimal">
+              <input id="idealeCarboidrati" type="number" min="0" placeholder="g/die" class="profilo-ideale-input"
+                inputmode="decimal">
               <span class="profilo-ideale-unit">g</span>
             </div>
           </div>
-          <svg id="graficoCarboidrati" class="profilo-svg" viewBox="0 0 320 160" preserveAspectRatio="xMidYMid meet"></svg>
+          <svg id="graficoCarboidrati" class="profilo-svg" viewBox="0 0 320 160"
+            preserveAspectRatio="xMidYMid meet"></svg>
           <p class="profilo-media" id="mediaCarboidrati"></p>
         </div>
 
@@ -233,7 +247,8 @@
             <span class="profilo-grafico-titolo" style="color:#a1da4c">Grassi</span>
             <div class="profilo-ideale-row">
               <span class="profilo-ideale-lbl">Ideale:</span>
-              <input id="idealeGrassi" type="number" min="0" placeholder="g/die" class="profilo-ideale-input" inputmode="decimal">
+              <input id="idealeGrassi" type="number" min="0" placeholder="g/die" class="profilo-ideale-input"
+                inputmode="decimal">
               <span class="profilo-ideale-unit">g</span>
             </div>
           </div>
@@ -263,10 +278,10 @@
   <div id="modaleModifica" class="modale hidden" role="dialog" aria-modal="true">
     <div class="modale-box">
       <h3>Modifica prodotto</h3>
-      <input id="editNome"        placeholder="Nome"               inputmode="text">
-      <input id="editMarca"       placeholder="Marca (facoltativo)" inputmode="text">
+      <input id="editNome" placeholder="Nome" inputmode="text">
+      <input id="editMarca" placeholder="Marca (facoltativo)" inputmode="text">
       <div class="row-duo">
-        <input id="editScadenza"  type="date" class="flex1">
+        <input id="editScadenza" type="date" class="flex1">
         <div class="quantita-group">
           <input id="editQuantita" type="number" min="1" placeholder="Qta" inputmode="numeric" class="input-qta">
           <select id="editUnita" class="select-unita">
@@ -279,10 +294,10 @@
         </div>
       </div>
       <select id="editTag"></select>
-      <input id="editCalorie"     placeholder="Calorie (per 100g)"     inputmode="decimal">
-      <input id="editProteine"    placeholder="Proteine (per 100g)"    inputmode="decimal">
+      <input id="editCalorie" placeholder="Calorie (per 100g)" inputmode="decimal">
+      <input id="editProteine" placeholder="Proteine (per 100g)" inputmode="decimal">
       <input id="editCarboidrati" placeholder="Carboidrati (per 100g)" inputmode="decimal">
-      <input id="editGrassi"      placeholder="Grassi (per 100g)"      inputmode="decimal">
+      <input id="editGrassi" placeholder="Grassi (per 100g)" inputmode="decimal">
       <div class="modale-azioni">
         <button id="salvaModifica" class="btn-primario">Salva</button>
         <button id="chiudiModifica" class="btn-secondario">Annulla</button>
@@ -303,9 +318,10 @@
     </div>
   </div>
 
-<button id="temaBtn" class="tema-btn" aria-label="Cambia tema">☾</button>
-  
-    
+  <button id="temaBtn" class="tema-btn" aria-label="Cambia tema">☾</button>
+
+
   <script src="script.js"></script>
 </body>
+
 </html>
