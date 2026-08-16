@@ -42,7 +42,8 @@ window.addEventListener("DOMContentLoaded", () => {
       tabBtns.forEach(b => b.classList.toggle("attivo", b.dataset.tab === target));
       tabContents.forEach(c => c.classList.toggle("hidden", c.id !== "tab-" + target));
       if (target === "confronta") { popolaListaConfronto(); aggiornaGraficiConfronto(); }
-      if (target === "unisci")   { popolaListaUnisci(); aggiornaUnisci(); }
+      if (target === "pasti")    { popolaListaPasti(); aggiornaPasti(); }
+      if (target === "profilo")  { renderProfilo(); }
     });
   });
 
@@ -50,6 +51,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // ELEMENTI UI
   // ============================================================
   const nomeInput        = document.getElementById("nome");
+  const marcaInput       = document.getElementById("marca");
   const scadenzaInput    = document.getElementById("scadenza");
   const quantitaInput    = document.getElementById("quantita");
   const unitaSelect      = document.getElementById("unitaSelect");
@@ -75,6 +77,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // Modale modifica prodotto
   const modaleModifica   = document.getElementById("modaleModifica");
   const editNome         = document.getElementById("editNome");
+  const editMarca        = document.getElementById("editMarca");
   const editScadenza     = document.getElementById("editScadenza");
   const editQuantita     = document.getElementById("editQuantita");
   const editUnita        = document.getElementById("editUnita");
@@ -97,6 +100,7 @@ window.addEventListener("DOMContentLoaded", () => {
   let dispensa = caricaDati("dispensa", []);
   let tags     = caricaDati("tags",     []);
   let catalogo = caricaDati("catalogo", []);
+  let pasti    = caricaDati("pasti",    []); // [{id, data, alimenti:[{nome,marca,grammi,cal,prot,carb,gras}], totCal, totProt, totCarb, totGras}]
 
   let filtroTag      = "TUTTI";
   let filtroScadenza = "TUTTI";
@@ -111,6 +115,7 @@ window.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("dispensa", JSON.stringify(dispensa));
       localStorage.setItem("tags",     JSON.stringify(tags));
       localStorage.setItem("catalogo", JSON.stringify(catalogo));
+      localStorage.setItem("pasti",    JSON.stringify(pasti));
     } catch(e) {
       console.warn("Salvataggio fallito:", e);
     }
@@ -175,9 +180,10 @@ window.addEventListener("DOMContentLoaded", () => {
     suggerimenti.classList.remove("hidden");
     matches.forEach(p => {
       const li = document.createElement("li");
-      li.textContent = p.nome;
+      li.textContent = p.nome + (p.marca ? ` (${p.marca})` : "");
       li.addEventListener("click", () => {
         nomeInput.value        = p.nome;
+        marcaInput.value       = p.marca       || "";
         calorieInput.value     = p.calorie     || "";
         proteineInput.value    = p.proteine    || "";
         carboidratiInput.value = p.carboidrati || "";
@@ -450,6 +456,7 @@ window.addEventListener("DOMContentLoaded", () => {
     indiceInModifica = idx;
     const p = dispensa[idx];
     editNome.value        = p.nome        || "";
+    editMarca.value       = p.marca       || "";
     editScadenza.value    = p.scadenza    || "";
     editQuantita.value    = p.quantita    || "";
     editUnita.value       = p.unita       || "pz";
@@ -469,6 +476,7 @@ window.addEventListener("DOMContentLoaded", () => {
     pushUndo();
     const p = dispensa[indiceInModifica];
     p.nome        = nome;
+    p.marca       = editMarca.value.trim();
     p.scadenza    = editScadenza.value;
     p.quantita    = editQuantita.value;
     p.unita       = editUnita.value;
@@ -713,7 +721,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       const nomeSpan = document.createElement("span");
       nomeSpan.className = "confronto-nome";
-      nomeSpan.textContent = p.nome;
+      nomeSpan.textContent = p.nome + (p.marca ? ` (${p.marca})` : "");
 
       const tagSpan = document.createElement("span");
       tagSpan.className = "confronto-tag";
@@ -739,17 +747,6 @@ window.addEventListener("DOMContentLoaded", () => {
       item.appendChild(nomeSpan);
       item.appendChild(tagSpan);
       confrontoLista.appendChild(item);
-    });
-  }
-
-  function aggiornaStatoCheckboxConfronto() {
-    const pieno = confrontoSelezionati.length >= 5;
-    confrontoLista.querySelectorAll(".confronto-item").forEach(item => {
-      const cb = item.querySelector("input[type=checkbox]");
-      if (!cb.checked) {
-        cb.disabled = pieno;
-        item.classList.toggle("disabilitato", pieno);
-      }
     });
   }
 
@@ -865,7 +862,7 @@ window.addEventListener("DOMContentLoaded", () => {
     chevron.className = "chevron";
     chevron.textContent = "\u25B6";
     nomeEl.appendChild(chevron);
-    const nomeTxt = document.createTextNode(p.nome);
+    const nomeTxt = document.createTextNode(p.nome + (p.marca ? ` (${p.marca})` : ""));
     nomeEl.appendChild(nomeTxt);
     if (qta) {
       const qtaEl = document.createElement("span");
@@ -1021,6 +1018,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const prodotto = {
       nome,
+      marca:       marcaInput.value.trim(),
       scadenza:    scadenzaInput.value,
       quantita:    quantitaInput.value,
       unita:       unitaSelect.value,
@@ -1048,7 +1046,7 @@ window.addEventListener("DOMContentLoaded", () => {
     render();
 
     // Reset campi
-    nomeInput.value = ""; scadenzaInput.value = "";
+    nomeInput.value = ""; marcaInput.value = ""; scadenzaInput.value = "";
     quantitaInput.value = ""; unitaSelect.value = "pz";
     tagInputEl.value = ""; tagSelectEl.value = "";
     calorieInput.value = ""; proteineInput.value = "";
@@ -1070,39 +1068,40 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================================================
-  // TAB UNISCI — combina fino a 10 alimenti con grammi liberi
+  // TAB PASTI (ex Unisci) — combina fino a 10 alimenti con grammi liberi
   // ============================================================
-  const unisciLista     = document.getElementById("unisciLista");
-  const unisciRicerca   = document.getElementById("unisciRicerca");
-  const unisciRisultato  = document.getElementById("unisciRisultato");
-  const unisciPieSvg     = document.getElementById("unisciPieSvg");
-  const unisciLeggenda   = document.getElementById("unisciLeggenda");
-  const unisciValori     = document.getElementById("unisciValori");
-  const unisciVuoto      = document.getElementById("unisciVuoto");
-  const unisciCancella   = document.getElementById("unisciCancella");
-  const unisciGrammiBox  = document.getElementById("unisciGrammiBox");
-  const unisciGrammiLista = document.getElementById("unisciGrammiLista");
+  const pastiLista      = document.getElementById("pastiLista");
+  const pastiRicerca    = document.getElementById("pastiRicerca");
+  const pastiRisultato  = document.getElementById("pastiRisultato");
+  const pastiPieSvg     = document.getElementById("pastiPieSvg");
+  const pastiLeggenda   = document.getElementById("pastiLeggenda");
+  const pastiValori     = document.getElementById("pastiValori");
+  const pastiVuoto      = document.getElementById("pastiVuoto");
+  const pastiCancella   = document.getElementById("pastiCancella");
+  const pastiGrammiBox  = document.getElementById("pastiGrammiBox");
+  const pastiGrammiLista = document.getElementById("pastiGrammiLista");
+  const aggiungiPastoBtn = document.getElementById("aggiungiPastoBtn");
 
   // Stato persistente: resta invariato passando da una tab all'altra,
   // si azzera solo premendo il tasto "cancella selezione".
-  let unisciSelezionati = {}; // { idx: grammi }
+  let pastiSelezionati = {}; // { idx: grammi }
 
-  unisciRicerca.addEventListener("input", () => popolaListaUnisci());
+  pastiRicerca.addEventListener("input", () => popolaListaPasti());
 
-  unisciCancella.addEventListener("click", () => {
-    unisciSelezionati = {};
-    unisciRicerca.value = "";
-    popolaListaUnisci();
-    aggiornaUnisci();
+  pastiCancella.addEventListener("click", () => {
+    pastiSelezionati = {};
+    pastiRicerca.value = "";
+    popolaListaPasti();
+    aggiornaPasti();
   });
 
-  function popolaListaUnisci() {
-    unisciLista.innerHTML = "";
+  function popolaListaPasti() {
+    pastiLista.innerHTML = "";
 
     if (!dispensa.length) {
-      unisciLista.innerHTML = `<p class="confronto-vuoto">Non ci sono alimenti in dispensa.</p>`;
+      pastiLista.innerHTML = `<p class="confronto-vuoto">Non ci sono alimenti in dispensa.</p>`;
     } else {
-      const query = unisciRicerca.value.trim().toLowerCase();
+      const query = pastiRicerca.value.trim().toLowerCase();
       const voci = dispensa
         .map((p, idx) => ({ idx, p }))
         .sort((a, b) => a.p.nome.localeCompare(b.p.nome, "it"));
@@ -1114,12 +1113,12 @@ window.addEventListener("DOMContentLoaded", () => {
         : voci;
 
       if (!vociFiltrate.length) {
-        unisciLista.innerHTML = `<p class="confronto-vuoto">Nessun alimento corrisponde alla ricerca.</p>`;
+        pastiLista.innerHTML = `<p class="confronto-vuoto">Nessun alimento corrisponde alla ricerca.</p>`;
       } else {
-        const pieno = Object.keys(unisciSelezionati).length >= 10;
+        const pieno = Object.keys(pastiSelezionati).length >= 10;
 
         vociFiltrate.forEach(({ idx, p }) => {
-          const isSelezionato = idx in unisciSelezionati;
+          const isSelezionato = idx in pastiSelezionati;
 
           const item = document.createElement("label");
           item.className = "confronto-item" +
@@ -1133,7 +1132,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
           const nomeSpan = document.createElement("span");
           nomeSpan.className = "confronto-nome";
-          nomeSpan.textContent = p.nome;
+          nomeSpan.textContent = p.nome + (p.marca ? ` (${p.marca})` : "");
 
           const tagSpan = document.createElement("span");
           tagSpan.className = "confronto-tag";
@@ -1141,48 +1140,48 @@ window.addEventListener("DOMContentLoaded", () => {
 
           cb.addEventListener("change", () => {
             if (cb.checked) {
-              if (Object.keys(unisciSelezionati).length >= 10) {
+              if (Object.keys(pastiSelezionati).length >= 10) {
                 cb.checked = false;
                 alert("Puoi selezionare al massimo 10 alimenti.");
                 return;
               }
-              unisciSelezionati[idx] = 100; // grammi default
+              pastiSelezionati[idx] = 100; // grammi default
             } else {
-              delete unisciSelezionati[idx];
+              delete pastiSelezionati[idx];
             }
-            popolaListaUnisci();
-            aggiornaUnisci();
+            popolaListaPasti();
+            aggiornaPasti();
           });
 
           item.appendChild(cb);
           item.appendChild(nomeSpan);
           item.appendChild(tagSpan);
-          unisciLista.appendChild(item);
+          pastiLista.appendChild(item);
         });
       }
     }
 
     // Lista grammi: contenitore separato, sempre aggiornato
     // indipendentemente dall'esito della ricerca sopra.
-    popolaGrammiUnisci();
+    popolaGrammiPasti();
   }
 
   // Disegna la lista "grammi per alimento selezionato" in un blocco
   // del tutto separato dalla lista di selezione, cosi' non serve
   // scorrere fino in fondo per modificare le quantita'.
-  function popolaGrammiUnisci() {
-    unisciGrammiLista.innerHTML = "";
+  function popolaGrammiPasti() {
+    pastiGrammiLista.innerHTML = "";
 
-    const selezionatiOrdinati = Object.keys(unisciSelezionati)
+    const selezionatiOrdinati = Object.keys(pastiSelezionati)
       .map(i => ({ idx: +i, p: dispensa[+i] }))
       .filter(({ p }) => !!p)
       .sort((a, b) => a.p.nome.localeCompare(b.p.nome, "it"));
 
     if (!selezionatiOrdinati.length) {
-      unisciGrammiBox.classList.add("hidden");
+      pastiGrammiBox.classList.add("hidden");
       return;
     }
-    unisciGrammiBox.classList.remove("hidden");
+    pastiGrammiBox.classList.remove("hidden");
 
     selezionatiOrdinati.forEach(({ idx, p }) => {
       const row = document.createElement("div");
@@ -1190,20 +1189,20 @@ window.addEventListener("DOMContentLoaded", () => {
 
       const nome = document.createElement("span");
       nome.className = "unisci-grammi-nome";
-      nome.textContent = p.nome;
+      nome.textContent = p.nome + (p.marca ? ` (${p.marca})` : "");
 
       const inp = document.createElement("input");
       inp.type = "number";
       inp.min = "0";
       inp.step = "1";
-      inp.value = unisciSelezionati[idx];
+      inp.value = pastiSelezionati[idx];
       inp.className = "unisci-grammi-input";
       inp.inputMode = "decimal";
 
       inp.addEventListener("input", () => {
         const v = parseFloat(inp.value);
-        unisciSelezionati[idx] = isNaN(v) || v < 0 ? 0 : v;
-        aggiornaUnisci();
+        pastiSelezionati[idx] = isNaN(v) || v < 0 ? 0 : v;
+        aggiornaPasti();
       });
 
       const unit = document.createElement("span");
@@ -1213,25 +1212,27 @@ window.addEventListener("DOMContentLoaded", () => {
       row.appendChild(nome);
       row.appendChild(inp);
       row.appendChild(unit);
-      unisciGrammiLista.appendChild(row);
+      pastiGrammiLista.appendChild(row);
     });
   }
 
-  function aggiornaUnisci() {
-    const sel = Object.keys(unisciSelezionati);
+  function aggiornaPasti() {
+    const sel = Object.keys(pastiSelezionati);
     if (!sel.length) {
-      unisciRisultato.classList.add("hidden");
-      unisciVuoto.classList.remove("hidden");
+      pastiRisultato.classList.add("hidden");
+      aggiungiPastoBtn.classList.add("hidden");
+      pastiVuoto.classList.remove("hidden");
       return;
     }
-    unisciVuoto.classList.add("hidden");
-    unisciRisultato.classList.remove("hidden");
+    pastiVuoto.classList.add("hidden");
+    pastiRisultato.classList.remove("hidden");
+    aggiungiPastoBtn.classList.remove("hidden");
 
     // Calcola totali pesati per i grammi impostati
     let totCal = 0, totProt = 0, totCarb = 0, totGras = 0;
     sel.forEach(i => {
       const p = dispensa[+i];
-      const g = unisciSelezionati[+i] || 0;
+      const g = pastiSelezionati[+i] || 0;
       const f = g / 100; // i valori nutrizionali sono per 100g
       totCal  += (parseFloat(p.calorie)     || 0) * f;
       totProt += (parseFloat(p.proteine)    || 0) * f;
@@ -1247,20 +1248,20 @@ window.addEventListener("DOMContentLoaded", () => {
       { label: "Grassi",      valore: totGras, colore: PIE.grassi,      unita: "g"    },
     ].filter(s => s.valore > 0);
 
-    disegnaTortaUnisci(slices, totMacro);
-    disegnaLeggendaUnisci(slices, totMacro);
-    disegnaValoriUnisci(totCal, totProt, totCarb, totGras);
+    disegnaTortaPasti(slices, totMacro);
+    disegnaLeggendaPasti(slices, totMacro);
+    disegnaValoriPasti(totCal, totProt, totCarb, totGras);
   }
 
-  function disegnaTortaUnisci(slices, tot) {
+  function disegnaTortaPasti(slices, tot) {
     const NS = "http://www.w3.org/2000/svg";
-    unisciPieSvg.innerHTML = "";
+    pastiPieSvg.innerHTML = "";
     if (!slices.length || tot === 0) {
       // Cerchio grigio se nessun macro
       const circle = document.createElementNS(NS, "circle");
       circle.setAttribute("cx", "100"); circle.setAttribute("cy", "100");
       circle.setAttribute("r", "90"); circle.setAttribute("fill", "var(--border)");
-      unisciPieSvg.appendChild(circle);
+      pastiPieSvg.appendChild(circle);
       return;
     }
     const R = 90, cx = 100, cy = 100;
@@ -1279,13 +1280,13 @@ window.addEventListener("DOMContentLoaded", () => {
       const path = document.createElementNS(NS, "path");
       path.setAttribute("d", d);
       path.setAttribute("fill", s.colore);
-      unisciPieSvg.appendChild(path);
+      pastiPieSvg.appendChild(path);
       ang = end;
     });
   }
 
-  function disegnaLeggendaUnisci(slices, tot) {
-    unisciLeggenda.innerHTML = "";
+  function disegnaLeggendaPasti(slices, tot) {
+    pastiLeggenda.innerHTML = "";
     slices.forEach(s => {
       const pct = tot > 0 ? Math.round((s.valore / tot) * 100) : 0;
       const row = document.createElement("div");
@@ -1300,12 +1301,12 @@ window.addEventListener("DOMContentLoaded", () => {
       pctSpan.className = "unisci-leggenda-pct";
       pctSpan.textContent = pct + "%";
       row.appendChild(dot); row.appendChild(lbl); row.appendChild(pctSpan);
-      unisciLeggenda.appendChild(row);
+      pastiLeggenda.appendChild(row);
     });
   }
 
-  function disegnaValoriUnisci(cal, prot, carb, gras) {
-    unisciValori.innerHTML = "";
+  function disegnaValoriPasti(cal, prot, carb, gras) {
+    pastiValori.innerHTML = "";
     const dati = [
       { label: "Calorie",     valore: cal,  unita: "kcal", colore: "#4E86C8" },
       { label: "Proteine",    valore: prot, unita: "g",    colore: PIE.proteine    },
@@ -1328,9 +1329,545 @@ window.addEventListener("DOMContentLoaded", () => {
       unitSpan.textContent = d.unita;
       num.appendChild(numSpan); num.appendChild(unitSpan);
       card.appendChild(lbl); card.appendChild(num);
-      unisciValori.appendChild(card);
+      pastiValori.appendChild(card);
     });
   }
+
+  // ============================================================
+  // AGGIUNGI PASTO (salva nella lista pasti)
+  // ============================================================
+  aggiungiPastoBtn.addEventListener("click", () => {
+    const sel = Object.keys(pastiSelezionati);
+    if (!sel.length) return;
+
+    let totCal = 0, totProt = 0, totCarb = 0, totGras = 0;
+    const alimentiPasto = [];
+
+    sel.forEach(i => {
+      const p = dispensa[+i];
+      const g = pastiSelezionati[+i] || 0;
+      const f = g / 100;
+      const cal  = (parseFloat(p.calorie)     || 0) * f;
+      const prot = (parseFloat(p.proteine)    || 0) * f;
+      const carb = (parseFloat(p.carboidrati) || 0) * f;
+      const gras = (parseFloat(p.grassi)      || 0) * f;
+      totCal  += cal;
+      totProt += prot;
+      totCarb += carb;
+      totGras += gras;
+      alimentiPasto.push({
+        nome:   p.nome,
+        marca:  p.marca || "",
+        grammi: g,
+        cal:    Math.round(cal  * 10) / 10,
+        prot:   Math.round(prot * 10) / 10,
+        carb:   Math.round(carb * 10) / 10,
+        gras:   Math.round(gras * 10) / 10,
+      });
+    });
+
+    const oggi = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const pasto = {
+      id:       Date.now(),
+      data:     oggi,
+      alimenti: alimentiPasto,
+      totCal:   Math.round(totCal  * 10) / 10,
+      totProt:  Math.round(totProt * 10) / 10,
+      totCarb:  Math.round(totCarb * 10) / 10,
+      totGras:  Math.round(totGras * 10) / 10,
+    };
+
+    pasti.push(pasto);
+    salva();
+
+    // Reset selezione
+    pastiSelezionati = {};
+    pastiRicerca.value = "";
+    popolaListaPasti();
+    aggiornaPasti();
+
+    // Feedback visivo: porta al profilo
+    const msgFb = document.createElement("div");
+    msgFb.className = "pasto-feedback";
+    msgFb.textContent = "✓ Pasto registrato!";
+    document.querySelector("#tab-pasti .card").appendChild(msgFb);
+    setTimeout(() => msgFb.remove(), 2500);
+  });
+
+  // ============================================================
+  // SEZIONE PROFILO — grafici andamento giornaliero
+  // ============================================================
+  let profiloIntervallo = "7d"; // "7d" | "1m" | "6m" | "1a"
+  let profiloOffset     = 0;   // 0 = periodo corrente, -1 = periodo precedente, ecc.
+  let profiloGiornoSelezionato = null; // "YYYY-MM-DD" del giorno cliccato
+
+  // Valori ideali (persistiti)
+  let ideali = caricaDati("ideali", { calorie: "", proteine: "", carboidrati: "", grassi: "" });
+
+  // Input valori ideali
+  const idealeCalInput  = document.getElementById("idealeCalorie");
+  const idealePrtInput  = document.getElementById("idealeProteine");
+  const idealeCrbInput  = document.getElementById("idealeCarboidrati");
+  const idealeGrsInput  = document.getElementById("idealeGrassi");
+
+  idealeCalInput.value  = ideali.calorie;
+  idealePrtInput.value  = ideali.proteine;
+  idealeCrbInput.value  = ideali.carboidrati;
+  idealeGrsInput.value  = ideali.grassi;
+
+  function salvaIdeali() {
+    ideali.calorie     = idealeCalInput.value;
+    ideali.proteine    = idealePrtInput.value;
+    ideali.carboidrati = idealeCrbInput.value;
+    ideali.grassi      = idealeGrsInput.value;
+    try { localStorage.setItem("ideali", JSON.stringify(ideali)); } catch(e) {}
+    renderProfilo();
+  }
+
+  [idealeCalInput, idealePrtInput, idealeCrbInput, idealeGrsInput].forEach(inp => {
+    inp.addEventListener("change", salvaIdeali);
+    inp.addEventListener("input",  salvaIdeali);
+  });
+
+  // Selettore intervallo
+  document.querySelectorAll(".profilo-int-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".profilo-int-btn").forEach(b => b.classList.remove("attivo"));
+      btn.classList.add("attivo");
+      profiloIntervallo = btn.dataset.intervallo;
+      profiloOffset = 0;
+      profiloGiornoSelezionato = null;
+      renderProfilo();
+    });
+  });
+
+  // Navigazione periodo
+  document.getElementById("profiloPrev").addEventListener("click", () => {
+    profiloOffset--;
+    profiloGiornoSelezionato = null;
+    renderProfilo();
+  });
+  document.getElementById("profiloNext").addEventListener("click", () => {
+    if (profiloOffset < 0) {
+      profiloOffset++;
+      profiloGiornoSelezionato = null;
+      renderProfilo();
+    }
+  });
+
+  // Calcola range date in base a intervallo + offset
+  function calcolaRange() {
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    let fine = new Date(oggi);
+    let inizio = new Date(oggi);
+
+    // Calcola durata del periodo
+    const durazioni = { "7d": 7, "1m": 30, "6m": 182, "1a": 365 };
+    const giorni = durazioni[profiloIntervallo] || 7;
+
+    // Fine periodo (offset 0 = oggi, -1 = N giorni fa, ecc.)
+    fine.setDate(fine.getDate() + profiloOffset * giorni);
+    inizio = new Date(fine);
+    inizio.setDate(inizio.getDate() - giorni + 1);
+
+    return { inizio, fine };
+  }
+
+  // Formatta data per label
+  function fmtData(d) {
+    return d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" });
+  }
+
+  function fmtDataCompleta(d) {
+    return d.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "long", year: "numeric" });
+  }
+
+  // Genera lista di date YYYY-MM-DD nell'intervallo
+  function dateNelRange(inizio, fine) {
+    const lista = [];
+    const cur = new Date(inizio);
+    while (cur <= fine) {
+      lista.push(cur.toISOString().slice(0, 10));
+      cur.setDate(cur.getDate() + 1);
+    }
+    return lista;
+  }
+
+  // Raggruppa pasti per data
+  function pastiPerData() {
+    const mappa = {};
+    pasti.forEach(pasto => {
+      if (!mappa[pasto.data]) mappa[pasto.data] = [];
+      mappa[pasto.data].push(pasto);
+    });
+    return mappa;
+  }
+
+  // Funzione principale render Profilo
+  function renderProfilo() {
+    const { inizio, fine } = calcolaRange();
+    const date = dateNelRange(inizio, fine);
+    const perData = pastiPerData();
+
+    // Label periodo
+    const navLabel = document.getElementById("profiloNavLabel");
+    navLabel.textContent = `${fmtData(inizio)} – ${fmtData(fine)}`;
+
+    // Disabilita freccia avanti se siamo già al periodo corrente
+    document.getElementById("profiloNext").disabled = profiloOffset >= 0;
+
+    // Calcola valori giornalieri
+    const valoriGiornalieri = date.map(d => {
+      const pastiDelGiorno = perData[d] || [];
+      const totCal  = pastiDelGiorno.reduce((s, p) => s + p.totCal,  0);
+      const totProt = pastiDelGiorno.reduce((s, p) => s + p.totProt, 0);
+      const totCarb = pastiDelGiorno.reduce((s, p) => s + p.totCarb, 0);
+      const totGras = pastiDelGiorno.reduce((s, p) => s + p.totGras, 0);
+      return { data: d, cal: totCal, prot: totProt, carb: totCarb, gras: totGras, haPasti: pastiDelGiorno.length > 0 };
+    });
+
+    // Calcola medie (solo sui giorni con almeno un pasto)
+    const giorniConPasti = valoriGiornalieri.filter(v => v.haPasti);
+    const n = giorniConPasti.length || 1;
+    const mediaCal  = giorniConPasti.reduce((s, v) => s + v.cal,  0) / n;
+    const mediaProt = giorniConPasti.reduce((s, v) => s + v.prot, 0) / n;
+    const mediaCarb = giorniConPasti.reduce((s, v) => s + v.carb, 0) / n;
+    const mediaGras = giorniConPasti.reduce((s, v) => s + v.gras, 0) / n;
+
+    // Definizione metriche grafici
+    const metriche = [
+      { svgId: "graficoCalorie",     mediaId: "mediaCalorie",     chiave: "cal",  colore: "#4E86C8", unita: "kcal", media: mediaCal,  ideale: parseFloat(ideali.calorie)     || 0 },
+      { svgId: "graficoProteine",    mediaId: "mediaProteine",    chiave: "prot", colore: "#8e94f2", unita: "g",    media: mediaProt, ideale: parseFloat(ideali.proteine)    || 0 },
+      { svgId: "graficoCarboidrati", mediaId: "mediaCarboidrati", chiave: "carb", colore: "#ee8434", unita: "g",    media: mediaCarb, ideale: parseFloat(ideali.carboidrati) || 0 },
+      { svgId: "graficoGrassi",      mediaId: "mediaGrassi",      chiave: "gras", colore: "#a1da4c", unita: "g",    media: mediaGras, ideale: parseFloat(ideali.grassi)      || 0 },
+    ];
+
+    metriche.forEach(m => {
+      const svg = document.getElementById(m.svgId);
+      const valori = valoriGiornalieri.map(v => v[m.chiave]);
+      disegnaGraficoProfilo(svg, valori, date, valoriGiornalieri, m.colore, m.ideale, m.unita);
+
+      const mediaEl = document.getElementById(m.mediaId);
+      const medVal = giorniConPasti.length > 0 ? Math.round(m.media * 10) / 10 : null;
+      mediaEl.textContent = medVal !== null
+        ? `Media periodo: ${medVal} ${m.unita}/giorno`
+        : "Nessun dato nel periodo";
+    });
+
+    // Mostra pasti del giorno selezionato
+    renderPastiGiorno(profiloGiornoSelezionato, perData);
+  }
+
+  function disegnaGraficoProfilo(svg, valori, date, valoriGiornalieri, colore, ideale, unita) {
+    svg.innerHTML = "";
+    const NS = "http://www.w3.org/2000/svg";
+
+    const W = 320, H = 160;
+    const padBottom = 28, padTop = 14, padLeft = 36, padRight = 8;
+    const areaW = W - padLeft - padRight;
+    const areaH = H - padBottom - padTop;
+    const n = valori.length;
+    if (n === 0) return;
+
+    const maxVal = Math.max(...valori, ideale || 0, 1);
+    const maxEff = maxVal * 1.15;
+
+    // Linee di sfondo (griglia orizzontale)
+    const stepY = Math.ceil(maxEff / 4);
+    for (let i = 0; i <= 4; i++) {
+      const v = i * stepY;
+      const y = padTop + areaH - (v / maxEff) * areaH;
+      const line = document.createElementNS(NS, "line");
+      line.setAttribute("x1", padLeft);
+      line.setAttribute("x2", W - padRight);
+      line.setAttribute("y1", y.toFixed(1));
+      line.setAttribute("y2", y.toFixed(1));
+      line.setAttribute("stroke", "var(--border)");
+      line.setAttribute("stroke-width", "0.5");
+      svg.appendChild(line);
+
+      // Label asse Y
+      const lbl = document.createElementNS(NS, "text");
+      lbl.setAttribute("x", (padLeft - 3).toString());
+      lbl.setAttribute("y", (y + 3).toFixed(1));
+      lbl.setAttribute("text-anchor", "end");
+      lbl.setAttribute("font-size", "8");
+      lbl.setAttribute("fill", "var(--text-muted)");
+      lbl.setAttribute("font-family", "Arial, sans-serif");
+      lbl.textContent = v > 999 ? Math.round(v / 100) / 10 + "k" : v;
+      svg.appendChild(lbl);
+    }
+
+    // Barre
+    const slotW = areaW / n;
+    const barW  = Math.max(Math.min(slotW * 0.65, 22), 4);
+
+    valori.forEach((val, i) => {
+      const barH = maxEff > 0 ? (val / maxEff) * areaH : 0;
+      const cx   = padLeft + slotW * i + slotW / 2;
+      const x    = cx - barW / 2;
+      const y    = padTop + areaH - barH;
+
+      // Barra
+      const rect = document.createElementNS(NS, "rect");
+      rect.setAttribute("x", x.toFixed(1));
+      rect.setAttribute("y", y.toFixed(1));
+      rect.setAttribute("width", barW.toFixed(1));
+      rect.setAttribute("height", Math.max(barH, 0).toFixed(1));
+      rect.setAttribute("rx", "3");
+      rect.setAttribute("fill", profiloGiornoSelezionato === date[i] ? colore : colore + "CC");
+      rect.setAttribute("stroke", profiloGiornoSelezionato === date[i] ? "#fff" : "none");
+      rect.setAttribute("stroke-width", "1.5");
+      rect.style.cursor = "pointer";
+      rect.style.transition = "opacity 0.15s";
+
+      // Hover e click
+      rect.addEventListener("mouseenter", () => rect.setAttribute("fill", colore));
+      rect.addEventListener("mouseleave", () => {
+        rect.setAttribute("fill", profiloGiornoSelezionato === date[i] ? colore : colore + "CC");
+      });
+      rect.addEventListener("click", () => {
+        profiloGiornoSelezionato = profiloGiornoSelezionato === date[i] ? null : date[i];
+        renderProfilo();
+      });
+
+      svg.appendChild(rect);
+
+      // Label data asse X (ogni N giorni per non sovraffollare)
+      const totDays = valori.length;
+      const mostraLabel = totDays <= 14 || i % Math.ceil(totDays / 8) === 0 || i === totDays - 1;
+      if (mostraLabel) {
+        const d = new Date(date[i] + "T00:00:00");
+        const lbl = document.createElementNS(NS, "text");
+        lbl.setAttribute("x", cx.toFixed(1));
+        lbl.setAttribute("y", (H - padBottom + 12).toFixed(1));
+        lbl.setAttribute("text-anchor", "middle");
+        lbl.setAttribute("font-size", "7");
+        lbl.setAttribute("fill", "var(--text-muted)");
+        lbl.setAttribute("font-family", "Arial, sans-serif");
+        lbl.textContent = `${d.getDate()}/${d.getMonth() + 1}`;
+        svg.appendChild(lbl);
+      }
+    });
+
+    // Linea ideale (rossa tratteggiata)
+    if (ideale > 0) {
+      const yIdeale = padTop + areaH - (ideale / maxEff) * areaH;
+      const lineaIdeale = document.createElementNS(NS, "line");
+      lineaIdeale.setAttribute("x1", padLeft.toString());
+      lineaIdeale.setAttribute("x2", (W - padRight).toString());
+      lineaIdeale.setAttribute("y1", yIdeale.toFixed(1));
+      lineaIdeale.setAttribute("y2", yIdeale.toFixed(1));
+      lineaIdeale.setAttribute("stroke", "#e63946");
+      lineaIdeale.setAttribute("stroke-width", "1.5");
+      lineaIdeale.setAttribute("stroke-dasharray", "4,3");
+      svg.appendChild(lineaIdeale);
+
+      // Label valore ideale
+      const lblIdeale = document.createElementNS(NS, "text");
+      lblIdeale.setAttribute("x", (W - padRight).toString());
+      lblIdeale.setAttribute("y", (yIdeale - 3).toFixed(1));
+      lblIdeale.setAttribute("text-anchor", "end");
+      lblIdeale.setAttribute("font-size", "8");
+      lblIdeale.setAttribute("fill", "#e63946");
+      lblIdeale.setAttribute("font-family", "Arial, sans-serif");
+      lblIdeale.textContent = ideale + " " + unita;
+      svg.appendChild(lblIdeale);
+    }
+  }
+
+  // ============================================================
+  // RENDER PASTI DEL GIORNO SELEZIONATO
+  // ============================================================
+  function renderPastiGiorno(dataStr, perData) {
+    const sezione    = document.getElementById("profiloPastiGiorno");
+    const titolo     = document.getElementById("profiloPastiGiornoTitolo");
+    const lista      = document.getElementById("profiloPastiGiornoLista");
+
+    if (!dataStr) {
+      sezione.style.display = "none";
+      return;
+    }
+
+    const pastiGiorno = perData[dataStr] || [];
+    sezione.style.display = "block";
+
+    const d = new Date(dataStr + "T00:00:00");
+    titolo.textContent = "Pasti del " + fmtDataCompleta(d);
+    lista.innerHTML = "";
+
+    if (!pastiGiorno.length) {
+      lista.innerHTML = `<p class="confronto-vuoto">Nessun pasto registrato in questo giorno.</p>`;
+      return;
+    }
+
+    pastiGiorno.forEach(pasto => {
+      const card = document.createElement("div");
+      card.className = "profilo-pasto-card";
+
+      // Header pasto con totali
+      const header = document.createElement("div");
+      header.className = "profilo-pasto-header";
+
+      const orario = document.createElement("span");
+      orario.className = "profilo-pasto-orario";
+      orario.textContent = `ID ${pasto.id % 10000}`;
+
+      const totali = document.createElement("span");
+      totali.className = "profilo-pasto-totali";
+      totali.textContent = `${pasto.totCal} kcal · P:${pasto.totProt}g · C:${pasto.totCarb}g · G:${pasto.totGras}g`;
+
+      header.appendChild(orario);
+      header.appendChild(totali);
+      card.appendChild(header);
+
+      // Lista alimenti
+      const alimentiEl = document.createElement("ul");
+      alimentiEl.className = "profilo-pasto-alimenti";
+      pasto.alimenti.forEach(a => {
+        const li = document.createElement("li");
+        li.textContent = `${a.nome}${a.marca ? ` (${a.marca})` : ""} — ${a.grammi}g → ${a.cal} kcal`;
+        alimentiEl.appendChild(li);
+      });
+      card.appendChild(alimentiEl);
+
+      // Azioni
+      const azioni = document.createElement("div");
+      azioni.className = "profilo-pasto-azioni";
+
+      const btnMod = document.createElement("button");
+      btnMod.className = "btn-modifica";
+      btnMod.textContent = "Modifica";
+      btnMod.addEventListener("click", () => apriModalePasto(pasto));
+
+      const btnDel = document.createElement("button");
+      btnDel.className = "btn-rimuovi";
+      btnDel.textContent = "Elimina";
+      btnDel.addEventListener("click", () => {
+        if (!confirm("Eliminare questo pasto?")) return;
+        pasti = pasti.filter(p => p.id !== pasto.id);
+        salva();
+        renderProfilo();
+      });
+
+      azioni.appendChild(btnMod);
+      azioni.appendChild(btnDel);
+      card.appendChild(azioni);
+
+      lista.appendChild(card);
+    });
+  }
+
+  // ============================================================
+  // MODALE MODIFICA PASTO
+  // ============================================================
+  const modalePasto       = document.getElementById("modalePasto");
+  const modalePastoData   = document.getElementById("modalePastoData");
+  const modalePastoAl     = document.getElementById("modalePastoAlimenti");
+  const salvaModPastoBtn  = document.getElementById("salvaModificaPasto");
+  const chiudiModalePasto = document.getElementById("chiudiModalePasto");
+
+  let pastoInModifica = null;
+  let grammiModifica  = {}; // { index: grammi }
+
+  function apriModalePasto(pasto) {
+    pastoInModifica = pasto;
+    const d = new Date(pasto.data + "T00:00:00");
+    modalePastoData.textContent = fmtDataCompleta(d);
+    modalePastoAl.innerHTML = "";
+    grammiModifica = {};
+
+    pasto.alimenti.forEach((a, i) => {
+      grammiModifica[i] = a.grammi;
+      const row = document.createElement("div");
+      row.className = "unisci-grammi-row";
+
+      const nome = document.createElement("span");
+      nome.className = "unisci-grammi-nome";
+      nome.textContent = a.nome + (a.marca ? ` (${a.marca})` : "");
+
+      const inp = document.createElement("input");
+      inp.type = "number";
+      inp.min = "0";
+      inp.step = "1";
+      inp.value = a.grammi;
+      inp.className = "unisci-grammi-input";
+      inp.inputMode = "decimal";
+      inp.addEventListener("input", () => {
+        const v = parseFloat(inp.value);
+        grammiModifica[i] = isNaN(v) || v < 0 ? 0 : v;
+      });
+
+      const unit = document.createElement("span");
+      unit.className = "unisci-grammi-unit";
+      unit.textContent = "g";
+
+      row.appendChild(nome);
+      row.appendChild(inp);
+      row.appendChild(unit);
+      modalePastoAl.appendChild(row);
+    });
+
+    modalePasto.classList.remove("hidden");
+  }
+
+  salvaModPastoBtn.addEventListener("click", () => {
+    if (!pastoInModifica) return;
+    // Ricalcola i totali con i nuovi grammi
+    const idx = pasti.findIndex(p => p.id === pastoInModifica.id);
+    if (idx === -1) return;
+
+    let totCal = 0, totProt = 0, totCarb = 0, totGras = 0;
+    const nuoviAlimenti = pastoInModifica.alimenti.map((a, i) => {
+      const g = grammiModifica[i] || 0;
+      // Cerca il prodotto in dispensa o catalogo per ricalcolare
+      const prod = catalogo.find(p => p.nome.toLowerCase() === a.nome.toLowerCase()) ||
+                   dispensa.find(p => p.nome.toLowerCase() === a.nome.toLowerCase());
+      const f = g / 100;
+      const cal  = prod ? (parseFloat(prod.calorie)     || 0) * f : a.cal  * (g / (a.grammi || 1));
+      const prot = prod ? (parseFloat(prod.proteine)    || 0) * f : a.prot * (g / (a.grammi || 1));
+      const carb = prod ? (parseFloat(prod.carboidrati) || 0) * f : a.carb * (g / (a.grammi || 1));
+      const gras = prod ? (parseFloat(prod.grassi)      || 0) * f : a.gras * (g / (a.grammi || 1));
+      totCal  += cal;
+      totProt += prot;
+      totCarb += carb;
+      totGras += gras;
+      return {
+        ...a,
+        grammi: g,
+        cal:  Math.round(cal  * 10) / 10,
+        prot: Math.round(prot * 10) / 10,
+        carb: Math.round(carb * 10) / 10,
+        gras: Math.round(gras * 10) / 10,
+      };
+    });
+
+    pasti[idx] = {
+      ...pasti[idx],
+      alimenti: nuoviAlimenti,
+      totCal:   Math.round(totCal  * 10) / 10,
+      totProt:  Math.round(totProt * 10) / 10,
+      totCarb:  Math.round(totCarb * 10) / 10,
+      totGras:  Math.round(totGras * 10) / 10,
+    };
+
+    salva();
+    modalePasto.classList.add("hidden");
+    pastoInModifica = null;
+    renderProfilo();
+  });
+
+  chiudiModalePasto.addEventListener("click", () => {
+    modalePasto.classList.add("hidden");
+    pastoInModifica = null;
+  });
+  modalePasto.addEventListener("click", e => {
+    if (e.target === modalePasto) {
+      modalePasto.classList.add("hidden");
+      pastoInModifica = null;
+    }
+  });
 
   // ============================================================
   // AVVIO

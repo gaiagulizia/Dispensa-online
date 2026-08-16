@@ -785,7 +785,7 @@ body.dark .scadenza-ok     { border-left-color: #a1da4c; }
   margin-left: 2px;
 }
 
-/* Riga di ogni alimento selezionato nel pannello unisci (con campo grammi) */
+/* Riga di ogni alimento selezionato nel pannello unisci/pasti (con campo grammi) */
 .unisci-grammi-row {
   display: flex;
   align-items: center;
@@ -815,4 +815,237 @@ body.dark .scadenza-ok     { border-left-color: #a1da4c; }
   font-size: 13px;
   color: var(--text-muted);
   flex-shrink: 0;
+}
+
+/* ===== BOTTONE AGGIUNGI PASTO ===== */
+.pasto-add-btn {
+  margin-top: 16px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  font-weight: bold;
+  letter-spacing: 0.3px;
+  box-shadow: 0 3px 12px rgba(142, 148, 242, 0.35);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+.pasto-add-btn:hover, .pasto-add-btn:active {
+  background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(142, 148, 242, 0.45);
+}
+.pasto-add-btn.hidden { display: none; }
+
+/* ===== FEEDBACK PASTO REGISTRATO ===== */
+.pasto-feedback {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: #a1da4c22;
+  border: 1.5px solid #a1da4c;
+  border-radius: 10px;
+  color: #5a8a1a;
+  font-size: 15px;
+  font-weight: bold;
+  text-align: center;
+  animation: fadeInOut 2.5s ease forwards;
+}
+body.dark .pasto-feedback { color: #a1da4c; background: #a1da4c11; }
+@keyframes fadeInOut {
+  0%   { opacity: 0; transform: translateY(-6px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ===== TAB PROFILO ===== */
+
+/* Selettore intervallo */
+.profilo-intervalli {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.profilo-int-btn {
+  flex: 1;
+  min-width: 56px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: Arial, sans-serif;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 36px;
+  text-align: center;
+}
+.profilo-int-btn:hover { border-color: var(--accent); color: var(--accent); }
+.profilo-int-btn.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Navigazione periodo */
+.profilo-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 8px;
+}
+.profilo-nav-label {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text-soft);
+}
+.profilo-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-soft);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.profilo-nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.profilo-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Grafici */
+.profilo-grafici {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.profilo-grafico-wrap {
+  background: var(--surface2);
+  border-radius: 12px;
+  padding: 14px 12px 10px;
+  border: 1px solid var(--border);
+}
+
+.profilo-grafico-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.profilo-grafico-titolo {
+  font-size: 15px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* Input valore ideale */
+.profilo-ideale-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.profilo-ideale-lbl {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.profilo-ideale-input {
+  width: 70px;
+  margin: 0;
+  padding: 5px 7px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: right;
+}
+.profilo-ideale-input:focus {
+  border-color: #e63946;
+  outline: none;
+}
+.profilo-ideale-unit {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* SVG grafico */
+.profilo-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* Media periodo */
+.profilo-media {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ===== PASTI DEL GIORNO ===== */
+.profilo-pasto-card {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border-left: 4px solid var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.profilo-pasto-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.profilo-pasto-orario {
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.profilo-pasto-totali {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text);
+  text-align: right;
+  flex: 1;
+}
+
+.profilo-pasto-alimenti {
+  list-style: none;
+  margin-bottom: 10px;
+}
+.profilo-pasto-alimenti li {
+  font-size: 13px;
+  color: var(--text-soft);
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+}
+.profilo-pasto-alimenti li:last-child { border-bottom: none; }
+
+.profilo-pasto-azioni {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.profilo-pasto-azioni .btn-rimuovi,
+.profilo-pasto-azioni .btn-modifica {
+  flex: 1;
+  padding: 8px;
+  font-size: 13px;
 }
